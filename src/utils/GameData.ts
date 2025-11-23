@@ -443,21 +443,21 @@ export class GameData {
 	}
 
 	static getTitleColor(bgKey: string): number {
-		// Map background asset keys to title colors that stand out and complement backgrounds
+		// Map background asset keys to title colors that match the background theme
 		const colorMap: Record<string, number> = {
-			"bg-day": 0xff6b35,        // Vibrant orange-red (stands out on sky blue)
-			"bg-sunset": 0xffff00,     // Bright yellow (stands out on red-orange)
-			"bg-night": 0xffd700,      // Gold (stands out on midnight blue)
-			"bg-forest": 0xffa500,     // Orange (stands out on dark green)
-			"bg-winter": 0xff4500,     // Orange red (stands out on light blue)
-			"bg-volcano": 0x00ffff,     // Cyan (stands out on dark red)
-			"bg-ocean": 0xffd700,       // Gold (stands out on deep blue)
-			"bg-space": 0x00ffff,      // Cyan (stands out on black)
-			"bg-city": 0x00ff00,       // Bright green (stands out on dark blue-gray)
-			"bg-storm": 0xffd700,      // Gold (stands out on dark purple-gray)
-			"bg-desert": 0x4169e1,     // Royal blue (stands out on sandy beige)
+			"bg-day": 0x87ceeb,        // Sky blue (matches sunny day)
+			"bg-sunset": 0xff6347,      // Tomato red-orange (matches sunset)
+			"bg-night": 0x191970,       // Midnight blue (matches night)
+			"bg-forest": 0x2d5016,      // Dark green (matches forest)
+			"bg-winter": 0xb0c4de,      // Light steel blue (matches winter)
+			"bg-volcano": 0xff4500,     // Orange red (matches volcano/lava)
+			"bg-ocean": 0x001f3f,       // Deep ocean blue (matches ocean)
+			"bg-space": 0x4b0082,       // Indigo purple (matches space/nebula)
+			"bg-city": 0x00bfff,        // Deep sky blue (matches neon city)
+			"bg-storm": 0x2c2c54,       // Dark purple-gray (matches storm)
+			"bg-desert": 0xd4a574,      // Sandy beige (matches desert)
 		};
-		return colorMap[bgKey] || 0xff6b35; // Default orange-red if not found
+		return colorMap[bgKey] || 0x87ceeb; // Default sky blue if not found
 	}
 
 	static getWeightedRandomItem(items: ShopItem[]): ShopItem {
