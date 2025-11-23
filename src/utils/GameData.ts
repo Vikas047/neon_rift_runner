@@ -39,12 +39,12 @@ export const SKINS: ShopItem[] = [
 	{
 		id: "skin-red",
 		name: "Crimson Rage",
-		price: 100,
+		price: 0,
 		type: "skin",
 		assetKey: "dude-red",
 		lore: "Fueled by the anger of a thousand fallen runs. He jumps faster, harder, and with zero remorse.",
 		nftId: "GENESIS-002",
-		rarity: "rare",
+		rarity: "common",
 	},
 	{
 		id: "skin-green",
@@ -252,7 +252,7 @@ export const BACKGROUNDS: ShopItem[] = [
 	{
 		id: "bg-desert",
 		name: "Desert Mirage",
-		price: 300,
+		price: 0,
 		type: "background",
 		assetKey: "bg-desert",
 		lore: "The sands shift with each frame. What you see may not be real, but the jumps are always true.",
@@ -287,11 +287,11 @@ export class GameData {
 		return {
 			coins: 0,
 			ownedItems: [
-				{ itemId: "skin-blue", nftId: "GENESIS-001" },
-				{ itemId: "bg-day", nftId: "LAND-001" }
+				{ itemId: "skin-red", nftId: "GENESIS-002" },
+				{ itemId: "bg-desert", nftId: "LAND-011" }
 			] as OwnedItem[],
-			equippedSkin: "skin-blue",
-			equippedBg: "bg-day",
+			equippedSkin: "skin-red",
+			equippedBg: "bg-desert",
 		};
 	}
 
@@ -397,13 +397,13 @@ export class GameData {
 	static getEquippedSkin(): string {
 		const id = this.data.equippedSkin;
 		const skin = SKINS.find((s) => s.id === id);
-		return skin ? skin.assetKey : "dude";
+		return skin ? skin.assetKey : "dude-red";
 	}
 
 	static getEquippedBackground(): string {
 		const id = this.data.equippedBg;
 		const bg = BACKGROUNDS.find((b) => b.id === id);
-		return bg ? bg.assetKey : "bg-day";
+		return bg ? bg.assetKey : "bg-desert";
 	}
 
 	static getBackgroundColor(bgKey: string): number {

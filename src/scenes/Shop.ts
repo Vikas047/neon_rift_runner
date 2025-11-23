@@ -345,12 +345,12 @@ export class Shop extends Scene {
 					.setStrokeStyle(2, 0xffffff)
 					.setInteractive({ cursor: "pointer" });
 				
-				// Transfer icon (arrow pointing right)
-				const transferIcon = this.add.text(90, transferY, "→", {
-					fontSize: "18px",
-					color: "#ffffff",
-					fontStyle: "bold"
-				}).setOrigin(0.5);
+			// Transfer icon (using Unicode transfer symbol)
+			const transferIcon = this.add.text(90, transferY, "⇄", {
+				fontSize: "20px",
+				color: "#ffffff",
+				fontStyle: "bold"
+			}).setOrigin(0.5);
 				
 				transferBtn.on("pointerdown", () => {
 					this.openTransferModal(item, displayNftId);
