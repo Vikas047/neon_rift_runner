@@ -61,16 +61,16 @@ export class MainMenu extends Scene {
 		const g = (baseColor >> 8) & 0xff;
 		const b = baseColor & 0xff;
 		
-		// Create darker version for top (reduce brightness by 40%)
-		const darkR = Math.max(0, Math.floor(r * 0.6));
-		const darkG = Math.max(0, Math.floor(g * 0.6));
-		const darkB = Math.max(0, Math.floor(b * 0.6));
+		// Create darker version for top (much darker - 30% brightness)
+		const darkR = Math.max(0, Math.floor(r * 0.3));
+		const darkG = Math.max(0, Math.floor(g * 0.3));
+		const darkB = Math.max(0, Math.floor(b * 0.3));
 		const darkColor = (darkR << 16) | (darkG << 8) | darkB;
 		
-		// Create lighter version for bottom (increase brightness by 20%)
-		const lightR = Math.min(255, Math.floor(r * 1.2));
-		const lightG = Math.min(255, Math.floor(g * 1.2));
-		const lightB = Math.min(255, Math.floor(b * 1.2));
+		// Create lighter version for bottom (much lighter - 180% brightness)
+		const lightR = Math.min(255, Math.floor(r * 1.8));
+		const lightG = Math.min(255, Math.floor(g * 1.8));
+		const lightB = Math.min(255, Math.floor(b * 1.8));
 		const lightColor = (lightR << 16) | (lightG << 8) | lightB;
 		
 		// Create gradient using Graphics
