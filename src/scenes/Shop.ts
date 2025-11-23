@@ -5,6 +5,18 @@ export class Shop extends Scene {
 	private balanceText: Phaser.GameObjects.Text;
 	private itemsContainer: Phaser.GameObjects.Container;
 	private currentTab: "skins" | "backgrounds" = "skins";
+	private gachaPriceSkin = 200;
+	private gachaPriceBg = 500;
+	
+	// Scroll properties
+	private scrollY = 0;
+	private minScrollY = 0;
+	private maxScrollY = 0;
+	private dragStartY = 0;
+	private isDragging = false;
+	private maskGraphics: Phaser.GameObjects.Graphics;
+	private scrollBar: Phaser.GameObjects.Rectangle;
+	private scrollTrack: Phaser.GameObjects.Rectangle;
 
 	constructor() {
 		super("Shop");
@@ -54,9 +66,84 @@ export class Shop extends Scene {
 		backButton.on("pointerdown", () => {
 			this.scene.start("MainMenu");
 		});
+		
+		// Scroll Setup
+		this.input.on("wheel", (pointer: any, gameObjects: any, deltaX: number, deltaY: number) => {
+			this.handleScroll(deltaY);
+		});
+
+		this.input.on("pointerdown", (pointer: Phaser.Input.Pointer) => {
+			if (pointer.y > 200) { // Only drag in item area
+				this.isDragging = true;
+				this.dragStartY = pointer.y;
+			}
+		});
+
+		this.input.on("pointerup", () => {
+			this.isDragging = false;
+		});
+
+		this.input.on("pointermove", (pointer: Phaser.Input.Pointer) => {
+			if (this.isDragging) {
+				const delta = this.dragStartY - pointer.y;
+				this.handleScroll(delta);
+				this.dragStartY = pointer.y;
+			}
+		});
+
+		// Create Mask for scrolling
+		this.maskGraphics = this.make.graphics({});
+		this.maskGraphics.fillStyle(0xffffff);
+		this.maskGraphics.fillRect(0, 220, 1024, 548); // Visible area below tabs
+		
+		// Create Scrollbar
+		this.scrollTrack = this.add.rectangle(1010, 494, 8, 548, 0x333333).setOrigin(0.5); // Center of track
+		this.scrollBar = this.add.rectangle(1010, 230, 8, 100, 0xaaaaaa).setOrigin(0.5, 0); // Top-aligned thumb
 
 		// Initial Content
 		this.showItems("skins");
+	}
+
+	private handleScroll(delta: number): void {
+		this.scrollY += delta;
+		
+		// Clamp scroll
+		if (this.scrollY < 0) this.scrollY = 0;
+		if (this.scrollY > this.maxScrollY) this.scrollY = this.maxScrollY;
+		
+		if (this.itemsContainer) {
+			this.itemsContainer.y = -this.scrollY;
+		}
+		
+		// Update Scrollbar
+		this.updateScrollBar();
+	}
+
+	private updateScrollBar(): void {
+		if (this.maxScrollY <= 0) {
+			this.scrollBar.setVisible(false);
+			this.scrollTrack.setVisible(false);
+			return;
+		}
+		
+		this.scrollBar.setVisible(true);
+		this.scrollTrack.setVisible(true);
+
+		const visibleHeight = 548;
+		const contentHeight = visibleHeight + this.maxScrollY;
+		const scrollRatio = this.scrollY / this.maxScrollY;
+		
+		// Calculate thumb size
+		let thumbHeight = (visibleHeight / contentHeight) * visibleHeight;
+		thumbHeight = Phaser.Math.Clamp(thumbHeight, 30, visibleHeight);
+		this.scrollBar.height = thumbHeight;
+
+		// Calculate thumb position
+		const trackTop = 220;
+		const availableTrack = visibleHeight - thumbHeight;
+		const thumbY = trackTop + (scrollRatio * availableTrack);
+		
+		this.scrollBar.y = thumbY;
 	}
 
 	private createTabs(): void {
@@ -95,19 +182,41 @@ export class Shop extends Scene {
 		});
 	}
 
+	private getDynamicPrice(type: "skins" | "backgrounds"): number {
+		const allItems = type === "skins" ? SKINS : BACKGROUNDS;
+		const ownedCount = allItems.filter(i => GameData.hasItem(i.id)).length;
+		
+		// Aggressive Scaling
+		// Skins: Base 500 + (Owned - 1) * 750
+		// Bgs: Base 1000 + (Owned - 1) * 1500
+		if (type === "skins") {
+			return 500 + ((ownedCount - 1) * 750);
+		} else {
+			return 1000 + ((ownedCount - 1) * 1500);
+		}
+	}
+
 	private showItems(type: "skins" | "backgrounds"): void {
 		if (this.itemsContainer) {
 			this.itemsContainer.destroy();
 		}
+		
+		// Reset scroll
+		this.scrollY = 0;
 
 		this.itemsContainer = this.add.container(0, 0);
-		const items = type === "skins" ? SKINS : BACKGROUNDS;
+		// Apply mask
+		const mask = this.maskGraphics.createGeometryMask();
+		this.itemsContainer.setMask(mask);
+
+		const allItems = type === "skins" ? SKINS : BACKGROUNDS;
+		const items = allItems.filter(i => GameData.hasItem(i.id));
 
 		let x = 250;
-		let y = 300;
+		let y = 350; // Base Y for grid
 		const cols = 3;
 		const paddingX = 250;
-		const paddingY = 200;
+		const paddingY = 320; // Increased vertical padding for taller cards
 
 		items.forEach((item, index) => {
 			const col = index % cols;
@@ -118,66 +227,151 @@ export class Shop extends Scene {
 
 			this.createItemCard(itemX, itemY, item);
 		});
+		
+		// Calculate Max Scroll based on content height
+		const rows = Math.ceil(items.length / cols);
+		let contentHeight = (rows * paddingY) + 350; // 350 is start Y
+
+		// Add "Buy Random" Button if there are unowned items
+		const unownedCount = allItems.filter(i => !GameData.hasItem(i.id)).length;
+		if (unownedCount > 0) {
+			const price = this.getDynamicPrice(type);
+			const buyBtnY = y + Math.ceil(items.length / cols) * paddingY + 30; // Position below grid
+			
+			const buyBtn = this.createButton(512, buyBtnY, `UNLOCK RANDOM (${price})`, 0xffb600, () => {
+				this.buyRandomItem(type);
+			});
+			// Make it bigger
+			(buyBtn.list[0] as Phaser.GameObjects.Rectangle).setSize(300, 50);
+			(buyBtn.list[1] as Phaser.GameObjects.Text).setFontSize(24);
+			
+			this.itemsContainer.add(buyBtn);
+			
+			contentHeight = buyBtnY + 100;
+		}
+		
+		// Start scroll at 220 (mask top) instead of 0 relative to container
+		// Items start at y=350. We want the top of the first item row (350 - ~150 for half height = 200) to be visible.
+		// Actually, let's just adjust the container padding.
+		
+		// Calculate max scroll
+		const visibleHeight = 548;
+		// The content starts at y=350. The mask starts at y=220.
+		// So there is a 130px gap.
+		// Content Bottom = contentHeight.
+		// We need to scroll until Content Bottom aligns with Mask Bottom (220 + 548 = 768).
+		
+		this.maxScrollY = Math.max(0, contentHeight - visibleHeight - 130);
+		this.updateScrollBar();
 	}
 
 	private createItemCard(x: number, y: number, item: ShopItem): void {
 		const isOwned = GameData.hasItem(item.id);
 		const isEquipped =
 			item.type === "skin"
-				? GameData.getEquippedSkin() === item.assetKey // Logic check: ID vs AssetKey mapping in GameData
+				? GameData.getEquippedSkin() === item.assetKey
 				: GameData.getEquippedBackground() === item.assetKey;
-
-		// Re-check this: GameData stores IDs for owned/equipped, but getters return AssetKey? 
-		// GameData.getEquippedSkin() returns assetKey. 
-		// To compare properly, I should check the stored ID directly or match assetKey.
-		// GameData.ts: 
-		// equippedSkin = id (e.g. "skin-red")
-		// getEquippedSkin() returns assetKey (e.g. "dude-red")
-		
-		// Wait, let's check GameData implementation again.
-		// static getEquippedSkin(): string { const id = this.data.equippedSkin; ... return skin.assetKey; }
-		
-		// So the comparison above `GameData.getEquippedSkin() === item.assetKey` is correct.
 
 		const bg = this.add.rectangle(0, 0, 220, 180, 0x333333).setStrokeStyle(2, 0xffffff);
 		
 		let preview: Phaser.GameObjects.Image | Phaser.GameObjects.Sprite;
 		
 		if (item.type === "skin") {
-			// For skins, show the first frame of spritesheet
 			preview = this.add.sprite(0, -20, item.assetKey, 4).setScale(1.5);
 		} else {
 			preview = this.add.image(0, -20, item.assetKey).setDisplaySize(150, 100);
 		}
-
-		const nameText = this.add.text(0, 40, item.name, {
-			fontSize: "16px",
-			color: "#ffffff",
-		}).setOrigin(0.5);
-
-		let actionBtn: Phaser.GameObjects.Container;
-
-		if (isEquipped) {
-			actionBtn = this.createButton(0, 80, "EQUIPPED", 0x00ff00, null);
-		} else if (isOwned) {
-			actionBtn = this.createButton(0, 80, "EQUIP", 0x4a90e2, () => {
-				GameData.equipItem(item.id, item.type);
-				this.showItems(this.currentTab); // Refresh
-			});
-		} else {
-			actionBtn = this.createButton(0, 80, `BUY ${item.price}`, 0xffb600, () => {
-				if (GameData.buyItem(item.id)) {
-					this.balanceText.setText(`Coins: ${GameData.getCoins()}`);
-					this.showItems(this.currentTab); // Refresh
-				} else {
-					// Maybe flash red or something
-					this.cameras.main.shake(100, 0.01);
-				}
-			});
+		
+		// If not owned, hide it
+		if (!isOwned) {
+			preview.setTint(0x000000); // Silhouette
 		}
 
-		const card = this.add.container(x, y, [bg, preview, nameText, actionBtn]);
+		// Name
+		const nameText = this.add.text(0, 30, isOwned ? item.name : "???", {
+			fontSize: "16px",
+			color: "#ffffff",
+			fontStyle: "bold",
+		}).setOrigin(0.5);
+
+		const cardComponents: Phaser.GameObjects.GameObject[] = [bg, preview, nameText];
+
+		if (isOwned) {
+			// Lore
+			const loreText = this.add.text(0, 60, item.lore, {
+				fontSize: "10px",
+				color: "#aaaaaa",
+				align: "center",
+				wordWrap: { width: 200 }
+			}).setOrigin(0.5, 0);
+			cardComponents.push(loreText);
+
+			// NFT ID
+			const nftText = this.add.text(0, -75, item.price === 0 ? "DEFAULT" : `NFT: ${item.nftId}`, {
+				fontSize: "10px",
+				color: item.price === 0 ? "#888888" : "#00ffff",
+				fontStyle: "bold"
+			}).setOrigin(0.5);
+			cardComponents.push(nftText);
+
+			let actionBtn: Phaser.GameObjects.Container;
+			const btnY = 140; // Move button down to make room for lore
+
+			if (isEquipped) {
+				actionBtn = this.createButton(0, btnY, "EQUIPPED", 0x00ff00, null);
+			} else {
+				actionBtn = this.createButton(0, btnY, "EQUIP", 0x4a90e2, () => {
+					GameData.equipItem(item.id, item.type);
+					this.showItems(this.currentTab); // Refresh
+				});
+			}
+			cardComponents.push(actionBtn);
+			
+			// Resize Background to fit new content
+			bg.setSize(220, 300);
+			// Shift preview up slightly
+			preview.y = -40;
+			nameText.y = 40;
+
+		} else {
+			// Locked Label
+			const lockedText = this.add.text(0, 80, "LOCKED", {
+				fontSize: "14px",
+				color: "#888888", 
+				fontStyle: "italic"
+			}).setOrigin(0.5);
+			cardComponents.push(lockedText);
+		}
+
+		const card = this.add.container(x, y, cardComponents);
 		this.itemsContainer.add(card);
+	}
+
+	private buyRandomItem(type: "skins" | "backgrounds"): void {
+		const price = this.getDynamicPrice(type);
+		
+		if (GameData.getCoins() < price) {
+			this.cameras.main.shake(100, 0.01); // Not enough money
+			return;
+		}
+
+		const items = type === "skins" ? SKINS : BACKGROUNDS;
+		const unowned = items.filter(i => !GameData.hasItem(i.id));
+		
+		if (unowned.length === 0) return; // Should be handled by button visibility, but safety check
+
+		const randomItem = Phaser.Math.RND.pick(unowned);
+		
+		if (GameData.removeCoins(price)) {
+			GameData.unlockItem(randomItem.id);
+			
+			// Refresh UI
+			this.balanceText.setText(`Coins: ${GameData.getCoins()}`);
+			this.showItems(this.currentTab);
+			
+			// Feedback
+			this.cameras.main.flash(200, 255, 255, 255);
+		}
 	}
 
 	private createButton(x: number, y: number, text: string, color: number, callback: (() => void) | null): Phaser.GameObjects.Container {
@@ -198,4 +392,3 @@ export class Shop extends Scene {
 		return container;
 	}
 }
-
