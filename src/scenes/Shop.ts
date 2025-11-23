@@ -17,6 +17,7 @@ export class Shop extends Scene {
 	private maskGraphics: Phaser.GameObjects.Graphics;
 	private scrollBar: Phaser.GameObjects.Rectangle;
 	private scrollTrack: Phaser.GameObjects.Rectangle;
+	private gradientGraphics: Phaser.GameObjects.Graphics;
 
 	constructor() {
 		super("Shop");
@@ -24,12 +25,7 @@ export class Shop extends Scene {
 
 	create(): void {
 		// Use solid background color matching the equipped background theme
-		const bgKey = GameData.getEquippedBackground();
-		const bgColor = GameData.getBackgroundColor(bgKey);
-		this.cameras.main.setBackgroundColor(bgColor);
-		
-		// Create gradient overlay (dark on top, light below)
-		this.createGradient(bgColor);
+		this.updateBackground();
 
 		// Title
 		this.add
@@ -375,6 +371,10 @@ export class Shop extends Scene {
 			} else {
 				actionBtn = this.createButton(0, btnY, "EQUIP", 0x4a90e2, () => {
 					GameData.equipItem(item.id, item.type);
+					// Update background immediately if a background was equipped
+					if (item.type === "background") {
+						this.updateBackground();
+					}
 					this.showItems(this.currentTab); // Refresh
 				});
 			}
@@ -490,8 +490,13 @@ export class Shop extends Scene {
 		const lightB = Math.min(255, Math.floor(b * 1.8));
 		const lightColor = (lightR << 16) | (lightG << 8) | lightB;
 		
+		// Destroy old gradient if it exists
+		if (this.gradientGraphics) {
+			this.gradientGraphics.destroy();
+		}
+		
 		// Create gradient using Graphics
-		const gradient = this.add.graphics();
+		this.gradientGraphics = this.add.graphics();
 		const height = 768;
 		const width = 1024;
 		const steps = 50; // Number of gradient steps for smooth transition
@@ -506,10 +511,17 @@ export class Shop extends Scene {
 			const currentB = Math.floor(darkB + (lightB - darkB) * progress);
 			const currentColor = (currentR << 16) | (currentG << 8) | currentB;
 			
-			gradient.fillStyle(currentColor, 1);
-			gradient.fillRect(0, y, width, height / steps + 1);
+			this.gradientGraphics.fillStyle(currentColor, 1);
+			this.gradientGraphics.fillRect(0, y, width, height / steps + 1);
 		}
 		
-		gradient.setDepth(-1); // Place behind everything
+		this.gradientGraphics.setDepth(-1); // Place behind everything
+	}
+
+	private updateBackground(): void {
+		const bgKey = GameData.getEquippedBackground();
+		const bgColor = GameData.getBackgroundColor(bgKey);
+		this.cameras.main.setBackgroundColor(bgColor);
+		this.createGradient(bgColor);
 	}
 }
