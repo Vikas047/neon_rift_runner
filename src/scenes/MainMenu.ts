@@ -13,9 +13,12 @@ export class MainMenu extends Scene {
 		this.cameras.main.setBackgroundColor(bgColor);
 		this.add.image(512, 384, bgKey).setDisplaySize(1024, 768);
 		
-		// Title logo with dynamic tint based on background
-		const titleColor = GameData.getTitleColor(bgKey);
-		this.add.image(512, 350, "logo").setScale(0.3).setTint(titleColor);
+		// Title logo with dynamic tint based on background (original color for sunny day)
+		const titleLogo = this.add.image(512, 350, "logo").setScale(0.3);
+		if (bgKey !== "bg-day") {
+			const titleColor = GameData.getTitleColor(bgKey);
+			titleLogo.setTint(titleColor);
+		}
 		
 		// Play Button Text
 		this.add

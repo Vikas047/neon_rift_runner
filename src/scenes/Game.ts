@@ -57,13 +57,15 @@ export class Game extends Scene {
 		// fourth platform
 		platforms.create(910, 450, "platform-sm");
 
-		// Apply platform colors based on background theme for contrast
-		const platformColor = GameData.getPlatformColor(bgKey);
-		platforms.children.iterate((child) => {
-			const platform = child as Phaser.Physics.Arcade.Sprite;
-			platform.setTint(platformColor);
-			return true;
-		});
+		// Apply platform colors based on background theme for contrast (original colors for sunny day)
+		if (bgKey !== "bg-day") {
+			const platformColor = GameData.getPlatformColor(bgKey);
+			platforms.children.iterate((child) => {
+				const platform = child as Phaser.Physics.Arcade.Sprite;
+				platform.setTint(platformColor);
+				return true;
+			});
+		}
 
 		const playerSkin = GameData.getEquippedSkin();
 
