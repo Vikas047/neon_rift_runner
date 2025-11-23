@@ -18,6 +18,7 @@ export class Shop extends Scene {
 	private scrollBar: Phaser.GameObjects.Rectangle;
 	private scrollTrack: Phaser.GameObjects.Rectangle;
 	private gradientGraphics: Phaser.GameObjects.Graphics;
+	private transferModal: Phaser.GameObjects.Container | null = null;
 
 	constructor() {
 		super("Shop");
@@ -334,6 +335,27 @@ export class Shop extends Scene {
 		const cardComponents: Phaser.GameObjects.GameObject[] = [bg, preview, nameText];
 
 		if (isOwned) {
+			// Transfer Button - Top Right (only for non-default items)
+			if (item.price > 0) {
+				const transferY = item.type === "background" ? -115 : -75;
+				const transferBtn = this.add.rectangle(90, transferY, 30, 30, 0x4a90e2)
+					.setStrokeStyle(2, 0xffffff)
+					.setInteractive({ cursor: "pointer" });
+				
+				// Transfer icon (arrow pointing right)
+				const transferIcon = this.add.text(90, transferY, "→", {
+					fontSize: "18px",
+					color: "#ffffff",
+					fontStyle: "bold"
+				}).setOrigin(0.5);
+				
+				transferBtn.on("pointerdown", () => {
+					this.openTransferModal(item, displayNftId);
+				});
+				
+				cardComponents.push(transferBtn, transferIcon);
+			}
+
 			// NFT ID - Top Center (higher for backgrounds)
 			const nftY = item.type === "background" ? -115 : -75;
 			const nftText = this.add.text(0, nftY, item.price === 0 ? "DEFAULT" : `NFT: ${displayNftId}`, {
@@ -523,5 +545,123 @@ export class Shop extends Scene {
 		const bgColor = GameData.getBackgroundColor(bgKey);
 		this.cameras.main.setBackgroundColor(bgColor);
 		this.createGradient(bgColor);
+	}
+
+	private openTransferModal(item: ShopItem, nftId: string): void {
+		// Close existing modal if open
+		if (this.transferModal) {
+			this.transferModal.destroy();
+		}
+
+		// Create modal background (semi-transparent overlay)
+		const overlay = this.add.rectangle(512, 384, 1024, 768, 0x000000, 0.7)
+			.setInteractive()
+			.on("pointerdown", () => this.closeTransferModal());
+
+		// Modal container
+		const modalBg = this.add.rectangle(512, 384, 500, 350, 0x1a1a1a)
+			.setStrokeStyle(3, 0x4a90e2);
+
+		// Title
+		const title = this.add.text(512, 250, "Transfer NFT", {
+			fontSize: "32px",
+			color: "#ffffff",
+			fontStyle: "bold"
+		}).setOrigin(0.5);
+
+		// Item info
+		const itemInfo = this.add.text(512, 300, `${item.name}\n${nftId}`, {
+			fontSize: "18px",
+			color: "#aaaaaa",
+			align: "center"
+		}).setOrigin(0.5);
+
+		// Recipient label
+		const recipientLabel = this.add.text(512, 360, "Recipient Address:", {
+			fontSize: "16px",
+			color: "#ffffff"
+		}).setOrigin(0.5);
+
+		// Input field background
+		const inputBg = this.add.rectangle(512, 400, 400, 40, 0x2a2a2a)
+			.setStrokeStyle(2, 0x4a90e2);
+
+		// Input text (simulated - Phaser doesn't have native input, using text that can be edited)
+		let recipientAddress = "";
+		const inputText = this.add.text(512, 400, "Enter address...", {
+			fontSize: "14px",
+			color: "#888888"
+		}).setOrigin(0.5);
+
+		// Make input interactive
+		inputBg.setInteractive({ cursor: "text" });
+		inputBg.on("pointerdown", () => {
+			// In a real implementation, you'd open a native input dialog
+			// For now, we'll use a prompt (in production, use a proper input system)
+			const address = prompt("Enter recipient address:");
+			if (address) {
+				recipientAddress = address;
+				inputText.setText(address.length > 30 ? address.substring(0, 30) + "..." : address);
+				inputText.setColor("#ffffff");
+			}
+		});
+
+		// Transfer button
+		const transferBtn = this.add.rectangle(512, 470, 200, 50, 0x4a90e2)
+			.setStrokeStyle(2, 0xffffff)
+			.setInteractive({ cursor: "pointer" });
+
+		const transferBtnText = this.add.text(512, 470, "TRANSFER", {
+			fontSize: "20px",
+			color: "#ffffff",
+			fontStyle: "bold"
+		}).setOrigin(0.5);
+
+		transferBtn.on("pointerdown", () => {
+			if (recipientAddress.trim()) {
+				// Here you would implement the actual transfer logic
+				alert(`Transferring ${item.name} (${nftId}) to ${recipientAddress}`);
+				// TODO: Implement actual transfer logic
+				this.closeTransferModal();
+			} else {
+				alert("Please enter a recipient address");
+			}
+		});
+
+		// Close button
+		const closeBtn = this.add.rectangle(750, 250, 40, 40, 0xff0000)
+			.setStrokeStyle(2, 0xffffff)
+			.setInteractive({ cursor: "pointer" });
+
+		const closeBtnText = this.add.text(750, 250, "×", {
+			fontSize: "30px",
+			color: "#ffffff",
+			fontStyle: "bold"
+		}).setOrigin(0.5);
+
+		closeBtn.on("pointerdown", () => this.closeTransferModal());
+		closeBtnText.on("pointerdown", () => this.closeTransferModal());
+
+		// Add all elements to modal container
+		this.transferModal = this.add.container(0, 0, [
+			overlay,
+			modalBg,
+			title,
+			itemInfo,
+			recipientLabel,
+			inputBg,
+			inputText,
+			transferBtn,
+			transferBtnText,
+			closeBtn,
+			closeBtnText
+		]).setDepth(1000); // Ensure modal is on top
+	}
+
+	private closeTransferModal(): void {
+		if (this.transferModal) {
+			this.transferModal.destroy();
+			this.transferModal = null;
+		}
 	}
 }
