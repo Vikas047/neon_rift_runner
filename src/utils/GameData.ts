@@ -1,3 +1,5 @@
+export type Rarity = "common" | "rare" | "epic" | "legendary";
+
 export interface ShopItem {
 	id: string;
 	name: string;
@@ -6,7 +8,22 @@ export interface ShopItem {
 	assetKey: string;
 	lore: string;
 	nftId: string;
+	rarity: Rarity;
 }
+
+export const RARITY_WEIGHTS: Record<Rarity, number> = {
+	common: 50,      // 50% chance
+	rare: 30,        // 30% chance
+	epic: 15,        // 15% chance
+	legendary: 5,    // 5% chance
+};
+
+export const RARITY_COLORS: Record<Rarity, number> = {
+	common: 0x9d9d9d,    // Gray
+	rare: 0x0070dd,      // Blue
+	epic: 0xa335ee,      // Purple
+	legendary: 0xff8000, // Orange
+};
 
 export const SKINS: ShopItem[] = [
 	{
@@ -17,6 +34,7 @@ export const SKINS: ShopItem[] = [
 		assetKey: "dude",
 		lore: "The original jumper. Forged in the pixel fires of 1985, he seeks only the highest platforms.",
 		nftId: "GENESIS-001",
+		rarity: "common",
 	},
 	{
 		id: "skin-red",
@@ -26,6 +44,7 @@ export const SKINS: ShopItem[] = [
 		assetKey: "dude-red",
 		lore: "Fueled by the anger of a thousand fallen runs. He jumps faster, harder, and with zero remorse.",
 		nftId: "GENESIS-002",
+		rarity: "rare",
 	},
 	{
 		id: "skin-green",
@@ -35,6 +54,7 @@ export const SKINS: ShopItem[] = [
 		assetKey: "dude-green",
 		lore: "A silent protector of the digital glade. Rumored to have once out-jumped a glitch.",
 		nftId: "GENESIS-003",
+		rarity: "rare",
 	},
 	{
 		id: "skin-yellow",
@@ -44,6 +64,7 @@ export const SKINS: ShopItem[] = [
 		assetKey: "dude-yellow",
 		lore: "Harnessing the power of a thousand suns. Blindingly fast and dangerously bright.",
 		nftId: "GENESIS-004",
+		rarity: "epic",
 	},
 	{
 		id: "skin-purple",
@@ -53,6 +74,7 @@ export const SKINS: ShopItem[] = [
 		assetKey: "dude-purple",
 		lore: "He has seen the code behind the curtain. He doesn't jump; he displaces reality.",
 		nftId: "GENESIS-005",
+		rarity: "legendary",
 	},
 	{
 		id: "skin-orange",
@@ -62,6 +84,7 @@ export const SKINS: ShopItem[] = [
 		assetKey: "dude-orange",
 		lore: "Born from the lava pits of Level 8. His boots leave scorch marks on the cloud servers.",
 		nftId: "GENESIS-006",
+		rarity: "legendary",
 	},
 ];
 
@@ -74,6 +97,7 @@ export const BACKGROUNDS: ShopItem[] = [
 		assetKey: "bg-day",
 		lore: "A perfect day for jumping. The clouds are fluffy, the sky is blue, and hope is high.",
 		nftId: "LAND-001",
+		rarity: "common",
 	},
 	{
 		id: "bg-sunset",
@@ -83,6 +107,7 @@ export const BACKGROUNDS: ShopItem[] = [
 		assetKey: "bg-sunset",
 		lore: "The sun sets on another run. A melancholy backdrop for those who seek improved high scores.",
 		nftId: "LAND-002",
+		rarity: "rare",
 	},
 	{
 		id: "bg-night",
@@ -92,6 +117,7 @@ export const BACKGROUNDS: ShopItem[] = [
 		assetKey: "bg-night",
 		lore: "Where the true gamers play. The stars witness your triumphs and your falls.",
 		nftId: "LAND-003",
+		rarity: "epic",
 	},
 	{
 		id: "bg-forest",
@@ -101,6 +127,7 @@ export const BACKGROUNDS: ShopItem[] = [
 		assetKey: "bg-forest",
 		lore: "Trees that have stood since the alpha build. They whisper cheat codes to those who listen.",
 		nftId: "LAND-004",
+		rarity: "legendary",
 	},
 	{
 		id: "bg-winter",
@@ -110,6 +137,7 @@ export const BACKGROUNDS: ShopItem[] = [
 		assetKey: "bg-winter",
 		lore: "Cold, unforgiving, and beautiful. Only the warmest CPUs survive here.",
 		nftId: "LAND-005",
+		rarity: "legendary",
 	},
 ];
 
@@ -201,5 +229,19 @@ export class GameData {
 		const id = this.data.equippedBg;
 		const bg = BACKGROUNDS.find((b) => b.id === id);
 		return bg ? bg.assetKey : "bg-day";
+	}
+
+	static getWeightedRandomItem(items: ShopItem[]): ShopItem {
+		// Create weighted pool
+		const pool: ShopItem[] = [];
+		items.forEach(item => {
+			const weight = RARITY_WEIGHTS[item.rarity];
+			for (let i = 0; i < weight; i++) {
+				pool.push(item);
+			}
+		});
+		
+		// Pick random from pool
+		return pool[Math.floor(Math.random() * pool.length)];
 	}
 }

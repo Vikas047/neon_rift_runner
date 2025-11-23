@@ -1,5 +1,5 @@
 import { Scene } from "phaser";
-import { GameData, SKINS, BACKGROUNDS, ShopItem } from "../utils/GameData";
+import { GameData, SKINS, BACKGROUNDS, ShopItem, RARITY_COLORS, Rarity } from "../utils/GameData";
 
 export class Shop extends Scene {
 	private balanceText: Phaser.GameObjects.Text;
@@ -323,6 +323,16 @@ export class Shop extends Scene {
 		const cardComponents: Phaser.GameObjects.GameObject[] = [bg, preview, nameText];
 
 		if (isOwned) {
+			// Rarity Badge
+			const rarityColor = RARITY_COLORS[item.rarity];
+			const rarityBg = this.add.rectangle(-90, -75, 70, 20, rarityColor);
+			const rarityText = this.add.text(-90, -75, item.rarity.toUpperCase(), {
+				fontSize: "9px",
+				color: "#ffffff",
+				fontStyle: "bold",
+			}).setOrigin(0.5);
+			cardComponents.push(rarityBg, rarityText);
+
 			// Lore
 			const loreText = this.add.text(0, 60, item.lore, {
 				fontSize: "10px",
@@ -333,7 +343,7 @@ export class Shop extends Scene {
 			cardComponents.push(loreText);
 
 			// NFT ID
-			const nftText = this.add.text(0, -75, item.price === 0 ? "DEFAULT" : `NFT: ${item.nftId}`, {
+			const nftText = this.add.text(90, -75, item.price === 0 ? "DEFAULT" : `NFT: ${item.nftId}`, {
 				fontSize: "10px",
 				color: item.price === 0 ? "#888888" : "#00ffff",
 				fontStyle: "bold"
@@ -386,7 +396,8 @@ export class Shop extends Scene {
 		
 		if (unowned.length === 0) return; // Should be handled by button visibility, but safety check
 
-		const randomItem = Phaser.Math.RND.pick(unowned);
+		// Use weighted random selection based on rarity
+		const randomItem = GameData.getWeightedRandomItem(unowned);
 		
 		if (GameData.removeCoins(price)) {
 			GameData.unlockItem(randomItem.id);
