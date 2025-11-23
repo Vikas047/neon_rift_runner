@@ -183,8 +183,10 @@ export class Shop extends Scene {
 	}
 
 	private getDynamicPrice(type: "skins" | "backgrounds"): number {
-		const allItems = type === "skins" ? SKINS : BACKGROUNDS;
-		const ownedCount = allItems.filter(i => GameData.hasItem(i.id)).length;
+		// Count all owned items (including duplicates)
+		const itemType = type === "skins" ? "skin" : "background";
+		const ownedItems = GameData.getOwnedItemsByType(itemType);
+		const ownedCount = ownedItems.length;
 		
 		// Aggressive Scaling
 		// Skins: Base 500 + (Owned - 1) * 750
@@ -210,7 +212,15 @@ export class Shop extends Scene {
 		this.itemsContainer.setMask(mask);
 
 		const allItems = type === "skins" ? SKINS : BACKGROUNDS;
-		const items = allItems.filter(i => GameData.hasItem(i.id));
+		// Get all owned items (including duplicates) with their NFT IDs
+		const itemType = type === "skins" ? "skin" : "background";
+		const ownedItems = GameData.getOwnedItemsByType(itemType);
+		
+		// Create cards for each owned item instance
+		const itemCards: { item: ShopItem; nftId: string }[] = ownedItems.map(owned => {
+			const item = allItems.find(i => i.id === owned.itemId);
+			return item ? { item, nftId: owned.nftId } : null;
+		}).filter(card => card !== null) as { item: ShopItem; nftId: string }[];
 
 		let x = 250;
 		let y = 400; // Base Y for grid
@@ -218,21 +228,21 @@ export class Shop extends Scene {
 		const paddingX = 250;
 		const paddingY = 320; // Increased vertical padding for taller cards
 
-		items.forEach((item, index) => {
+		itemCards.forEach((cardData, index) => {
 			const col = index % cols;
 			const row = Math.floor(index / cols);
 			
 			const itemX = x + col * paddingX;
 			const itemY = y + row * paddingY;
 
-			this.createItemCard(itemX, itemY, item);
+			this.createItemCard(itemX, itemY, cardData.item, cardData.nftId);
 		});
 		
 		// Always show "Mystery Card" (unlimited unlocks allowed)
 		const price = this.getDynamicPrice(type);
 		
 		// Calculate position for the next card in the grid
-		const index = items.length; // Next available index
+		const index = itemCards.length; // Next available index
 		const col = index % cols;
 		const row = Math.floor(index / cols);
 		
@@ -242,7 +252,7 @@ export class Shop extends Scene {
 		this.createMysteryCard(mysteryX, mysteryY, price, type);
 		
 		// Calculate Max Scroll based on content height including mystery card
-		const totalItems = items.length + 1;
+		const totalItems = itemCards.length + 1;
 		const rows = Math.ceil(totalItems / cols);
 		let contentHeight = (rows * paddingY) + 400; // 400 is start Y
 
@@ -288,12 +298,15 @@ export class Shop extends Scene {
 		this.itemsContainer.add(card);
 	}
 
-	private createItemCard(x: number, y: number, item: ShopItem): void {
+	private createItemCard(x: number, y: number, item: ShopItem, nftId?: string): void {
 		const isOwned = GameData.hasItem(item.id);
 		const isEquipped =
 			item.type === "skin"
 				? GameData.getEquippedSkin() === item.assetKey
 				: GameData.getEquippedBackground() === item.assetKey;
+		
+		// Use provided NFT ID or fall back to item's base NFT ID
+		const displayNftId = nftId || item.nftId;
 
 		const bg = this.add.rectangle(0, 0, 220, 180, 0x333333).setStrokeStyle(2, 0xffffff);
 		
@@ -322,7 +335,7 @@ export class Shop extends Scene {
 		if (isOwned) {
 			// NFT ID - Top Center (higher for backgrounds)
 			const nftY = item.type === "background" ? -115 : -75;
-			const nftText = this.add.text(0, nftY, item.price === 0 ? "DEFAULT" : `NFT: ${item.nftId}`, {
+			const nftText = this.add.text(0, nftY, item.price === 0 ? "DEFAULT" : `NFT: ${displayNftId}`, {
 				fontSize: "10px",
 				color: item.price === 0 ? "#888888" : "#00ffff",
 				fontStyle: "bold"
@@ -396,6 +409,8 @@ export class Shop extends Scene {
 		const randomItem = GameData.getWeightedRandomItem(items);
 		
 		if (GameData.removeCoins(price)) {
+			const wasAlreadyOwned = GameData.hasItem(randomItem.id);
+			
 			// Unlock item (will skip if already owned, but still allows unlimited unlocks)
 			GameData.unlockItem(randomItem.id);
 			
@@ -403,7 +418,29 @@ export class Shop extends Scene {
 			this.balanceText.setText(`Coins: ${GameData.getCoins()}`);
 			this.showItems(this.currentTab);
 			
-			// Feedback
+			// Show feedback with item name
+			const message = wasAlreadyOwned 
+				? `Already own: ${randomItem.name}` 
+				: `Unlocked: ${randomItem.name}!`;
+			
+			const feedbackText = this.add.text(512, 384, message, {
+				fontSize: "32px",
+				color: wasAlreadyOwned ? "#ffaa00" : "#00ff00",
+				fontStyle: "bold",
+				stroke: "#000000",
+				strokeThickness: 6,
+			}).setOrigin(0.5).setScrollFactor(0);
+			
+			// Animate and remove
+			this.tweens.add({
+				targets: feedbackText,
+				alpha: 0,
+				y: 300,
+				duration: 2000,
+				onComplete: () => feedbackText.destroy()
+			});
+			
+			// Flash effect
 			this.cameras.main.flash(200, 255, 255, 255);
 		}
 	}
@@ -419,8 +456,12 @@ export class Shop extends Scene {
 		const container = this.add.container(x, y, [bg, txt]);
 
 		if (callback) {
-			bg.setInteractive({ cursor: "pointer" });
+			// Make both the background and container interactive
+			bg.setInteractive({ cursor: "pointer", useHandCursor: true });
+			container.setInteractive(new Phaser.Geom.Rectangle(-60, -15, 120, 30), Phaser.Geom.Rectangle.Contains);
+			
 			bg.on("pointerdown", callback);
+			container.on("pointerdown", callback);
 		}
 
 		return container;
