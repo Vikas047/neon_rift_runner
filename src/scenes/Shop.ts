@@ -323,10 +323,18 @@ export class Shop extends Scene {
 		const cardComponents: Phaser.GameObjects.GameObject[] = [bg, preview, nameText];
 
 		if (isOwned) {
-			// Rarity Badge
+			// NFT ID - Top Center
+			const nftText = this.add.text(0, -75, item.price === 0 ? "DEFAULT" : `NFT: ${item.nftId}`, {
+				fontSize: "10px",
+				color: item.price === 0 ? "#888888" : "#00ffff",
+				fontStyle: "bold"
+			}).setOrigin(0.5);
+			cardComponents.push(nftText);
+
+			// Rarity Badge - Top Left
 			const rarityColor = RARITY_COLORS[item.rarity];
-			const rarityBg = this.add.rectangle(-90, -75, 70, 20, rarityColor);
-			const rarityText = this.add.text(-90, -75, item.rarity.toUpperCase(), {
+			const rarityBg = this.add.rectangle(-90, -55, 70, 20, rarityColor);
+			const rarityText = this.add.text(-90, -55, item.rarity.toUpperCase(), {
 				fontSize: "9px",
 				color: "#ffffff",
 				fontStyle: "bold",
@@ -341,14 +349,6 @@ export class Shop extends Scene {
 				wordWrap: { width: 200 }
 			}).setOrigin(0.5, 0);
 			cardComponents.push(loreText);
-
-			// NFT ID
-			const nftText = this.add.text(90, -75, item.price === 0 ? "DEFAULT" : `NFT: ${item.nftId}`, {
-				fontSize: "10px",
-				color: item.price === 0 ? "#888888" : "#00ffff",
-				fontStyle: "bold"
-			}).setOrigin(0.5);
-			cardComponents.push(nftText);
 
 			let actionBtn: Phaser.GameObjects.Container;
 			const btnY = 140; // Move button down to make room for lore
