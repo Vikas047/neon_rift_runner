@@ -1,4 +1,5 @@
 import { Scene } from "phaser";
+import { GameData } from "../utils/GameData";
 
 export class Preloader extends Scene {
 	constructor() {
@@ -6,7 +7,12 @@ export class Preloader extends Scene {
 	}
 
 	init(): void {
-		this.add.image(512, 384, "background");
+		// Use solid background color matching the equipped background theme
+		const bgKey = GameData.getEquippedBackground();
+		const bgColor = GameData.getBackgroundColor(bgKey);
+		this.cameras.main.setBackgroundColor(bgColor);
+		
+		// Loading bar background
 		this.add.rectangle(512, 384, 468, 32).setStrokeStyle(1, 0xffffff);
 	}
 
