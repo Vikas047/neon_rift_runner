@@ -213,7 +213,7 @@ export class Shop extends Scene {
 		const items = allItems.filter(i => GameData.hasItem(i.id));
 
 		let x = 250;
-		let y = 350; // Base Y for grid
+		let y = 400; // Base Y for grid
 		const cols = 3;
 		const paddingX = 250;
 		const paddingY = 320; // Increased vertical padding for taller cards
@@ -228,41 +228,67 @@ export class Shop extends Scene {
 			this.createItemCard(itemX, itemY, item);
 		});
 		
-		// Calculate Max Scroll based on content height
-		const rows = Math.ceil(items.length / cols);
-		let contentHeight = (rows * paddingY) + 350; // 350 is start Y
-
-		// Add "Buy Random" Button if there are unowned items
+		// Add "Mystery Card" if there are unowned items
 		const unownedCount = allItems.filter(i => !GameData.hasItem(i.id)).length;
 		if (unownedCount > 0) {
 			const price = this.getDynamicPrice(type);
-			const buyBtnY = y + Math.ceil(items.length / cols) * paddingY + 30; // Position below grid
 			
-			const buyBtn = this.createButton(512, buyBtnY, `UNLOCK RANDOM (${price})`, 0xffb600, () => {
-				this.buyRandomItem(type);
-			});
-			// Make it bigger
-			(buyBtn.list[0] as Phaser.GameObjects.Rectangle).setSize(300, 50);
-			(buyBtn.list[1] as Phaser.GameObjects.Text).setFontSize(24);
+			// Calculate position for the next card in the grid
+			const index = items.length; // Next available index
+			const col = index % cols;
+			const row = Math.floor(index / cols);
 			
-			this.itemsContainer.add(buyBtn);
+			const mysteryX = x + col * paddingX;
+			const mysteryY = y + row * paddingY;
 			
-			contentHeight = buyBtnY + 100;
+			this.createMysteryCard(mysteryX, mysteryY, price, type);
 		}
 		
-		// Start scroll at 220 (mask top) instead of 0 relative to container
-		// Items start at y=350. We want the top of the first item row (350 - ~150 for half height = 200) to be visible.
-		// Actually, let's just adjust the container padding.
-		
+		// Calculate Max Scroll based on content height including mystery card
+		const totalItems = items.length + (unownedCount > 0 ? 1 : 0);
+		const rows = Math.ceil(totalItems / cols);
+		let contentHeight = (rows * paddingY) + 400; // 400 is start Y
+
 		// Calculate max scroll
 		const visibleHeight = 548;
-		// The content starts at y=350. The mask starts at y=220.
-		// So there is a 130px gap.
+		// The content starts at y=400. The mask starts at y=220.
+		// So there is a 180px gap.
 		// Content Bottom = contentHeight.
 		// We need to scroll until Content Bottom aligns with Mask Bottom (220 + 548 = 768).
 		
-		this.maxScrollY = Math.max(0, contentHeight - visibleHeight - 130);
+		this.maxScrollY = Math.max(0, contentHeight - visibleHeight - 180);
 		this.updateScrollBar();
+	}
+
+	private createMysteryCard(x: number, y: number, price: number, type: "skins" | "backgrounds"): void {
+		const bg = this.add.rectangle(0, 0, 220, 300, 0x222222).setStrokeStyle(2, 0xffb600);
+		
+		// Silhouette
+		let preview: Phaser.GameObjects.Image | Phaser.GameObjects.Sprite;
+		if (type === "skins") {
+			preview = this.add.sprite(0, -40, "dude", 4).setScale(1.5).setTint(0x000000);
+		} else {
+			preview = this.add.image(0, -40, "bg-day").setDisplaySize(150, 100).setTint(0x000000);
+		}
+
+		const titleText = this.add.text(0, 30, "MYSTERY ITEM", {
+			fontSize: "16px",
+			color: "#ffb600",
+			fontStyle: "bold",
+		}).setOrigin(0.5);
+
+		const priceText = this.add.text(0, 60, `${price} COINS`, {
+			fontSize: "14px",
+			color: "#ffffff",
+		}).setOrigin(0.5);
+
+		// Unlock Button
+		const unlockBtn = this.createButton(0, 100, "UNLOCK", 0xffb600, () => {
+			this.buyRandomItem(type);
+		});
+
+		const card = this.add.container(x, y, [bg, preview, titleText, priceText, unlockBtn]);
+		this.itemsContainer.add(card);
 	}
 
 	private createItemCard(x: number, y: number, item: ShopItem): void {
