@@ -147,7 +147,7 @@ export class Shop extends Scene {
 	}
 
 	private createTabs(): void {
-		const y = 150;
+		const y = 170;
 		
 		const skinsTab = this.add
 			.text(300, y, "SKINS", {
