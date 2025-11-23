@@ -7,11 +7,10 @@ export class MainMenu extends Scene {
 	}
 
 	create(): void {
-		// Use equipped background - always fill the screen
+		// Use solid background color matching the equipped background theme
 		const bgKey = GameData.getEquippedBackground();
 		const bgColor = GameData.getBackgroundColor(bgKey);
 		this.cameras.main.setBackgroundColor(bgColor);
-		this.add.image(512, 384, bgKey).setDisplaySize(1024, 768);
 		
 		// Title logo with dynamic tint based on background (original color for sunny day)
 		const titleLogo = this.add.image(512, 350, "logo").setScale(0.3);
