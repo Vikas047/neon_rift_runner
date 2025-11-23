@@ -147,7 +147,7 @@ export class Shop extends Scene {
 	}
 
 	private createTabs(): void {
-		const y = 170;
+		const y = 190;
 		
 		const skinsTab = this.add
 			.text(300, y, "SKINS", {
@@ -228,24 +228,21 @@ export class Shop extends Scene {
 			this.createItemCard(itemX, itemY, item);
 		});
 		
-		// Add "Mystery Card" if there are unowned items
-		const unownedCount = allItems.filter(i => !GameData.hasItem(i.id)).length;
-		if (unownedCount > 0) {
-			const price = this.getDynamicPrice(type);
-			
-			// Calculate position for the next card in the grid
-			const index = items.length; // Next available index
-			const col = index % cols;
-			const row = Math.floor(index / cols);
-			
-			const mysteryX = x + col * paddingX;
-			const mysteryY = y + row * paddingY;
-			
-			this.createMysteryCard(mysteryX, mysteryY, price, type);
-		}
+		// Always show "Mystery Card" (unlimited unlocks allowed)
+		const price = this.getDynamicPrice(type);
+		
+		// Calculate position for the next card in the grid
+		const index = items.length; // Next available index
+		const col = index % cols;
+		const row = Math.floor(index / cols);
+		
+		const mysteryX = x + col * paddingX;
+		const mysteryY = y + row * paddingY;
+		
+		this.createMysteryCard(mysteryX, mysteryY, price, type);
 		
 		// Calculate Max Scroll based on content height including mystery card
-		const totalItems = items.length + (unownedCount > 0 ? 1 : 0);
+		const totalItems = items.length + 1;
 		const rows = Math.ceil(totalItems / cols);
 		let contentHeight = (rows * paddingY) + 400; // 400 is start Y
 
@@ -394,14 +391,12 @@ export class Shop extends Scene {
 		}
 
 		const items = type === "skins" ? SKINS : BACKGROUNDS;
-		const unowned = items.filter(i => !GameData.hasItem(i.id));
 		
-		if (unowned.length === 0) return; // Should be handled by button visibility, but safety check
-
-		// Use weighted random selection based on rarity
-		const randomItem = GameData.getWeightedRandomItem(unowned);
+		// Use weighted random selection from ALL items (can get duplicates)
+		const randomItem = GameData.getWeightedRandomItem(items);
 		
 		if (GameData.removeCoins(price)) {
+			// Unlock item (will skip if already owned, but still allows unlimited unlocks)
 			GameData.unlockItem(randomItem.id);
 			
 			// Refresh UI
