@@ -19,6 +19,9 @@ export class Shop extends Scene {
 	private scrollTrack: Phaser.GameObjects.Rectangle;
 	private gradientGraphics: Phaser.GameObjects.Graphics;
 	private transferModal: Phaser.GameObjects.Container | null = null;
+	private recipientAddress: string = "";
+	private inputText: Phaser.GameObjects.Text | null = null;
+	private isInputFocused: boolean = false;
 
 	constructor() {
 		super("Shop");
@@ -555,12 +558,29 @@ export class Shop extends Scene {
 
 		// Create modal background (semi-transparent overlay)
 		const overlay = this.add.rectangle(512, 384, 1024, 768, 0x000000, 0.7)
-			.setInteractive()
-			.on("pointerdown", () => this.closeTransferModal());
+			.setInteractive();
+		
+		// Close modal when clicking overlay (but not when clicking inside modal)
+		overlay.on("pointerdown", () => {
+			this.closeTransferModal();
+		});
 
 		// Modal container
 		const modalBg = this.add.rectangle(512, 384, 500, 350, 0x1a1a1a)
-			.setStrokeStyle(3, 0x4a90e2);
+			.setStrokeStyle(3, 0x4a90e2)
+			.setInteractive()
+			.on("pointerdown", (pointer: Phaser.Input.Pointer) => {
+				pointer.event.stopPropagation(); // Prevent overlay click
+				// Unfocus input if clicking on modal background
+				if (this.isInputFocused) {
+					this.isInputFocused = false;
+					inputBg.setStrokeStyle(2, 0x4a90e2);
+					if (this.recipientAddress === "") {
+						this.inputText!.setText("Enter address...");
+						this.inputText!.setColor("#888888");
+					}
+				}
+			});
 
 		// Title
 		const title = this.add.text(512, 250, "Transfer NFT", {
@@ -586,25 +606,67 @@ export class Shop extends Scene {
 		const inputBg = this.add.rectangle(512, 400, 400, 40, 0x2a2a2a)
 			.setStrokeStyle(2, 0x4a90e2);
 
-		// Input text (simulated - Phaser doesn't have native input, using text that can be edited)
-		let recipientAddress = "";
-		const inputText = this.add.text(512, 400, "Enter address...", {
+		// Reset input state
+		this.recipientAddress = "";
+		this.isInputFocused = false;
+
+		// Input text
+		this.inputText = this.add.text(512, 400, "Enter address...", {
 			fontSize: "14px",
 			color: "#888888"
-		}).setOrigin(0.5);
+		}).setOrigin(0.5, 0.5);
 
 		// Make input interactive
 		inputBg.setInteractive({ cursor: "text" });
-		inputBg.on("pointerdown", () => {
-			// In a real implementation, you'd open a native input dialog
-			// For now, we'll use a prompt (in production, use a proper input system)
-			const address = prompt("Enter recipient address:");
-			if (address) {
-				recipientAddress = address;
-				inputText.setText(address.length > 30 ? address.substring(0, 30) + "..." : address);
-				inputText.setColor("#ffffff");
+		inputBg.on("pointerdown", (pointer: Phaser.Input.Pointer) => {
+			pointer.event.stopPropagation(); // Prevent overlay click
+			this.isInputFocused = true;
+			inputBg.setStrokeStyle(2, 0x00ff00); // Green border when focused
+			if (this.recipientAddress === "") {
+				this.inputText!.setText("");
+				this.inputText!.setColor("#ffffff");
 			}
 		});
+
+
+		// Keyboard input handler
+		const keyHandler = (event: KeyboardEvent) => {
+			if (!this.isInputFocused) return;
+
+			if (event.key === "Backspace") {
+				this.recipientAddress = this.recipientAddress.slice(0, -1);
+			} else if (event.key === "Enter") {
+				// Submit on Enter
+				if (this.recipientAddress.trim()) {
+					this.executeTransfer(item, nftId, this.recipientAddress);
+				}
+				return;
+			} else if (event.key.length === 1) {
+				// Only add printable characters
+				this.recipientAddress += event.key;
+			}
+
+			// Update display text
+			if (this.recipientAddress === "") {
+				this.inputText!.setText("Enter address...");
+				this.inputText!.setColor("#888888");
+			} else {
+				// Show full text or truncated with ellipsis
+				const displayText = this.recipientAddress.length > 35 
+					? this.recipientAddress.substring(0, 35) + "..." 
+					: this.recipientAddress;
+				this.inputText!.setText(displayText);
+				this.inputText!.setColor("#ffffff");
+			}
+		};
+
+		// Add keyboard listener
+		window.addEventListener("keydown", keyHandler);
+
+		// Store cleanup function
+		const cleanup = () => {
+			window.removeEventListener("keydown", keyHandler);
+		};
 
 		// Transfer button
 		const transferBtn = this.add.rectangle(512, 470, 200, 50, 0x4a90e2)
@@ -618,11 +680,8 @@ export class Shop extends Scene {
 		}).setOrigin(0.5);
 
 		transferBtn.on("pointerdown", () => {
-			if (recipientAddress.trim()) {
-				// Here you would implement the actual transfer logic
-				alert(`Transferring ${item.name} (${nftId}) to ${recipientAddress}`);
-				// TODO: Implement actual transfer logic
-				this.closeTransferModal();
+			if (this.recipientAddress.trim()) {
+				this.executeTransfer(item, nftId, this.recipientAddress);
 			} else {
 				alert("Please enter a recipient address");
 			}
@@ -650,18 +709,39 @@ export class Shop extends Scene {
 			itemInfo,
 			recipientLabel,
 			inputBg,
-			inputText,
+			this.inputText!,
 			transferBtn,
 			transferBtnText,
 			closeBtn,
 			closeBtnText
 		]).setDepth(1000); // Ensure modal is on top
+
+		// Store cleanup function in modal data
+		(this.transferModal as any).cleanup = cleanup;
+	}
+
+	private executeTransfer(item: ShopItem, nftId: string, address: string): void {
+		// Here you would implement the actual transfer logic
+		alert(`Transferring ${item.name} (${nftId}) to ${address}`);
+		// TODO: Implement actual transfer logic
+		// This would typically:
+		// 1. Remove the NFT from the current owner's inventory
+		// 2. Add it to the recipient's inventory
+		// 3. Update blockchain/NFT registry if applicable
+		this.closeTransferModal();
 	}
 
 	private closeTransferModal(): void {
 		if (this.transferModal) {
+			// Cleanup keyboard listener
+			if ((this.transferModal as any).cleanup) {
+				(this.transferModal as any).cleanup();
+			}
 			this.transferModal.destroy();
 			this.transferModal = null;
+			this.inputText = null;
+			this.recipientAddress = "";
+			this.isInputFocused = false;
 		}
 	}
 }
