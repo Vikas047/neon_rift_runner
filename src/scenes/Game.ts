@@ -69,6 +69,11 @@ export class Game extends Scene {
 
 		const playerSkin = GameData.getEquippedSkin();
 
+		// Remove existing player animations if they exist (to handle skin changes)
+		if (this.anims.exists("left")) this.anims.remove("left");
+		if (this.anims.exists("turn")) this.anims.remove("turn");
+		if (this.anims.exists("right")) this.anims.remove("right");
+
 		this.anims.create({
 			key: "left",
 			frames: this.anims.generateFrameNumbers(playerSkin, { start: 0, end: 3 }),
@@ -97,6 +102,11 @@ export class Game extends Scene {
 		});
 
 		cursors = this.input.keyboard!.createCursorKeys();
+
+		// Destroy old player if it exists (to handle skin changes)
+		if (player) {
+			player.destroy();
+		}
 
 		player = this.physics.add.sprite(100, 500, playerSkin);
 		player.setBounce(0.2);
