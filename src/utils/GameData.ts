@@ -86,6 +86,66 @@ export const SKINS: ShopItem[] = [
 		nftId: "GENESIS-006",
 		rarity: "legendary",
 	},
+	{
+		id: "skin-cyan",
+		name: "Neon Phantom",
+		price: 250,
+		type: "skin",
+		assetKey: "dude",
+		lore: "A glitch in the matrix. He exists between frames, leaving trails of digital energy.",
+		nftId: "GENESIS-007",
+		rarity: "epic",
+	},
+	{
+		id: "skin-pink",
+		name: "Cherry Blossom",
+		price: 200,
+		type: "skin",
+		assetKey: "dude-red",
+		lore: "Petals fall with each jump. A warrior of spring, graceful yet deadly.",
+		nftId: "GENESIS-008",
+		rarity: "rare",
+	},
+	{
+		id: "skin-emerald",
+		name: "Jade Warrior",
+		price: 300,
+		type: "skin",
+		assetKey: "dude-green",
+		lore: "Carved from ancient jade. His jumps echo through the digital mountains.",
+		nftId: "GENESIS-009",
+		rarity: "epic",
+	},
+	{
+		id: "skin-gold",
+		name: "Golden God",
+		price: 400,
+		type: "skin",
+		assetKey: "dude-yellow",
+		lore: "The ultimate form. He doesn't jump—gravity begs for his permission.",
+		nftId: "GENESIS-010",
+		rarity: "legendary",
+	},
+	{
+		id: "skin-shadow",
+		name: "Shadow Assassin",
+		price: 350,
+		type: "skin",
+		assetKey: "dude-purple",
+		lore: "Born from the void between pixels. He is the absence of light, the master of stealth.",
+		nftId: "GENESIS-011",
+		rarity: "legendary",
+	},
+	{
+		id: "skin-lava",
+		name: "Volcano Eruption",
+		price: 450,
+		type: "skin",
+		assetKey: "dude-orange",
+		lore: "The earth's fury made manifest. Each jump triggers a seismic event.",
+		nftId: "GENESIS-012",
+		rarity: "legendary",
+	},
 ];
 
 export const BACKGROUNDS: ShopItem[] = [
@@ -137,6 +197,96 @@ export const BACKGROUNDS: ShopItem[] = [
 		assetKey: "bg-winter",
 		lore: "Cold, unforgiving, and beautiful. Only the warmest CPUs survive here.",
 		nftId: "LAND-005",
+		rarity: "legendary",
+	},
+	{
+		id: "bg-volcano",
+		name: "Volcano Eruption",
+		price: 500,
+		type: "background",
+		assetKey: "bg-sunset",
+		lore: "The sky burns with the fury of a thousand eruptions. Lava flows like code through the veins of the earth.",
+		nftId: "LAND-006",
+		rarity: "legendary",
+	},
+	{
+		id: "bg-storm",
+		name: "Thunderstorm",
+		price: 450,
+		type: "background",
+		assetKey: "bg-night",
+		lore: "Lightning cracks the digital sky. The storm rages eternal, powered by the rage of fallen players.",
+		nftId: "LAND-007",
+		rarity: "legendary",
+	},
+	{
+		id: "bg-jungle",
+		name: "Tropical Jungle",
+		price: 400,
+		type: "background",
+		assetKey: "bg-forest",
+		lore: "Vines hang like code snippets. The jungle remembers every jump, every fall, every victory.",
+		nftId: "LAND-008",
+		rarity: "epic",
+	},
+	{
+		id: "bg-desert",
+		name: "Desert Mirage",
+		price: 350,
+		type: "background",
+		assetKey: "bg-sunset",
+		lore: "The sands shift with each frame. What you see may not be real, but the jumps are always true.",
+		nftId: "LAND-009",
+		rarity: "epic",
+	},
+	{
+		id: "bg-ocean",
+		name: "Ocean Depths",
+		price: 450,
+		type: "background",
+		assetKey: "bg-night",
+		lore: "Beneath the waves, the pressure is immense. Only the bravest jumpers dare these depths.",
+		nftId: "LAND-010",
+		rarity: "legendary",
+	},
+	{
+		id: "bg-space",
+		name: "Cosmic Void",
+		price: 600,
+		type: "background",
+		assetKey: "bg-night",
+		lore: "Among the stars, gravity is a suggestion. Here, jumpers become legends written in stardust.",
+		nftId: "LAND-011",
+		rarity: "legendary",
+	},
+	{
+		id: "bg-aurora",
+		name: "Northern Lights",
+		price: 550,
+		type: "background",
+		assetKey: "bg-night",
+		lore: "The aurora dances to the rhythm of your jumps. A celestial light show for the worthy.",
+		nftId: "LAND-012",
+		rarity: "legendary",
+	},
+	{
+		id: "bg-cherry",
+		name: "Cherry Blossom Grove",
+		price: 400,
+		type: "background",
+		assetKey: "bg-forest",
+		lore: "Petals fall like pixels. In this grove, time stands still and every jump is poetry.",
+		nftId: "LAND-013",
+		rarity: "epic",
+	},
+	{
+		id: "bg-city",
+		name: "Neon City",
+		price: 500,
+		type: "background",
+		assetKey: "bg-night",
+		lore: "The city never sleeps. Neon signs flicker with the heartbeat of a thousand players.",
+		nftId: "LAND-014",
 		rarity: "legendary",
 	},
 ];
@@ -245,12 +395,8 @@ export class GameData {
 		const item = [...SKINS, ...BACKGROUNDS].find((i) => i.id === id);
 		if (!item) return false;
 
-		if (this.hasItem(id)) return true;
-
 		if (this.removeCoins(item.price)) {
-			const data = this.data;
-			data.ownedItems.push(id);
-			this.save(data);
+			this.unlockItem(id);
 			return true;
 		}
 		return false;
