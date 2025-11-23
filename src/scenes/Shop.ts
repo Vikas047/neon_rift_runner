@@ -323,18 +323,20 @@ export class Shop extends Scene {
 		const cardComponents: Phaser.GameObjects.GameObject[] = [bg, preview, nameText];
 
 		if (isOwned) {
-			// NFT ID - Top Center
-			const nftText = this.add.text(0, -75, item.price === 0 ? "DEFAULT" : `NFT: ${item.nftId}`, {
+			// NFT ID - Top Center (higher for backgrounds)
+			const nftY = item.type === "background" ? -90 : -75;
+			const nftText = this.add.text(0, nftY, item.price === 0 ? "DEFAULT" : `NFT: ${item.nftId}`, {
 				fontSize: "10px",
 				color: item.price === 0 ? "#888888" : "#00ffff",
 				fontStyle: "bold"
 			}).setOrigin(0.5);
 			cardComponents.push(nftText);
 
-			// Rarity Badge - Top Left
+			// Rarity Badge - Top Left (adjusted for backgrounds)
+			const rarityY = item.type === "background" ? -70 : -55;
 			const rarityColor = RARITY_COLORS[item.rarity];
-			const rarityBg = this.add.rectangle(-90, -55, 70, 20, rarityColor);
-			const rarityText = this.add.text(-90, -55, item.rarity.toUpperCase(), {
+			const rarityBg = this.add.rectangle(-90, rarityY, 70, 20, rarityColor);
+			const rarityText = this.add.text(-90, rarityY, item.rarity.toUpperCase(), {
 				fontSize: "9px",
 				color: "#ffffff",
 				fontStyle: "bold",
