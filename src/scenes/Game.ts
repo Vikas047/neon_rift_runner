@@ -35,9 +35,9 @@ export class Game extends Scene {
 	}
 
 	create(): void {
-		// Background
+		// Background - always fill the screen
 		const bgKey = GameData.getEquippedBackground();
-		this.add.image(512, 384, bgKey);
+		this.add.image(512, 384, bgKey).setDisplaySize(1024, 768);
 
 		collectSound = this.sound.add("collectSound");
 		explosionSound = this.sound.add("explosionSound");

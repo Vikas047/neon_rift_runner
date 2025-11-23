@@ -23,8 +23,8 @@ export class Shop extends Scene {
 	}
 
 	create(): void {
-		// Background
-		this.add.image(512, 384, "bg-day").setTint(0x666666); // Darken bg for shop
+		// Background - always fill the screen
+		this.add.image(512, 384, "bg-day").setDisplaySize(1024, 768).setTint(0x666666); // Darken bg for shop
 
 		// Title
 		this.add

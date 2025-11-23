@@ -16,8 +16,10 @@ export class Preloader extends Scene {
 		this.load.image("logo", "images/ui/jumper-title.png");
 		// Backgrounds
 		this.load.image("bg-day", "images/background/bg.png");
-		this.load.image("bg-sunset", "images/background/bg-sunset.png");
-		this.load.image("bg-night", "images/background/bg-night.png");
+		this.load.image("bg-volcano", "images/background/bg-volcano.png");
+		this.load.image("bg-ocean", "images/background/bg-ocean.png");
+		this.load.image("bg-space", "images/background/bg-space.png");
+		this.load.image("bg-city", "images/background/bg-city.png");
 		
 		this.load.image("sky", "images/background/sky.png");
 		this.load.image("platform-sm", "images/platforms/platform-sm-i.png");
