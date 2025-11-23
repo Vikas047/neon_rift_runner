@@ -406,6 +406,24 @@ export class GameData {
 		return bg ? bg.assetKey : "bg-day";
 	}
 
+	static getBackgroundColor(bgKey: string): number {
+		// Map background asset keys to appropriate background colors for contrast
+		const colorMap: Record<string, number> = {
+			"bg-day": 0x87ceeb,        // Sky blue
+			"bg-sunset": 0xff6347,      // Tomato red-orange
+			"bg-night": 0x191970,       // Midnight blue
+			"bg-forest": 0x2d5016,     // Dark green
+			"bg-winter": 0xb0c4de,      // Light steel blue
+			"bg-volcano": 0x8b0000,     // Dark red
+			"bg-ocean": 0x001f3f,       // Deep ocean blue
+			"bg-space": 0x000000,       // Pure black
+			"bg-city": 0x1a1a2e,        // Dark blue-gray
+			"bg-storm": 0x2c2c54,       // Dark purple-gray
+			"bg-desert": 0xd4a574,      // Sandy beige
+		};
+		return colorMap[bgKey] || 0x028af8; // Default blue if not found
+	}
+
 	static getWeightedRandomItem(items: ShopItem[]): ShopItem {
 		// Create weighted pool
 		const pool: ShopItem[] = [];

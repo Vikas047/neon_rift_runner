@@ -24,7 +24,10 @@ export class Shop extends Scene {
 
 	create(): void {
 		// Background - always fill the screen
-		this.add.image(512, 384, "bg-day").setDisplaySize(1024, 768).setTint(0x666666); // Darken bg for shop
+		const bgKey = GameData.getEquippedBackground();
+		const bgColor = GameData.getBackgroundColor(bgKey);
+		this.cameras.main.setBackgroundColor(bgColor);
+		this.add.image(512, 384, bgKey).setDisplaySize(1024, 768).setTint(0x666666); // Darken bg for shop
 
 		// Title
 		this.add
