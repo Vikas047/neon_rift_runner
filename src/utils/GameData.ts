@@ -442,6 +442,24 @@ export class GameData {
 		return colorMap[bgKey] || 0x8b4513; // Default brown if not found
 	}
 
+	static getTitleColor(bgKey: string): number {
+		// Map background asset keys to title colors that stand out and complement backgrounds
+		const colorMap: Record<string, number> = {
+			"bg-day": 0xff6b35,        // Vibrant orange-red (stands out on sky blue)
+			"bg-sunset": 0xffff00,     // Bright yellow (stands out on red-orange)
+			"bg-night": 0xffd700,      // Gold (stands out on midnight blue)
+			"bg-forest": 0xffa500,     // Orange (stands out on dark green)
+			"bg-winter": 0xff4500,     // Orange red (stands out on light blue)
+			"bg-volcano": 0x00ffff,     // Cyan (stands out on dark red)
+			"bg-ocean": 0xffd700,       // Gold (stands out on deep blue)
+			"bg-space": 0x00ffff,      // Cyan (stands out on black)
+			"bg-city": 0x00ff00,       // Bright green (stands out on dark blue-gray)
+			"bg-storm": 0xffd700,      // Gold (stands out on dark purple-gray)
+			"bg-desert": 0x4169e1,     // Royal blue (stands out on sandy beige)
+		};
+		return colorMap[bgKey] || 0xff6b35; // Default orange-red if not found
+	}
+
 	static getWeightedRandomItem(items: ShopItem[]): ShopItem {
 		// Create weighted pool
 		const pool: ShopItem[] = [];
