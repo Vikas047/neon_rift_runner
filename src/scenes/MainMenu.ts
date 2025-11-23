@@ -12,6 +12,9 @@ export class MainMenu extends Scene {
 		const bgColor = GameData.getBackgroundColor(bgKey);
 		this.cameras.main.setBackgroundColor(bgColor);
 		
+		// Create gradient overlay (dark on top, light below)
+		this.createGradient(bgColor);
+		
 		// Title logo with dynamic tint based on background (original color for sunny day)
 		const titleLogo = this.add.image(512, 350, "logo").setScale(0.3);
 		if (bgKey !== "bg-day") {
@@ -50,6 +53,47 @@ export class MainMenu extends Scene {
 
 		// Navigation
 		this.setupNavigation();
+	}
+
+	private createGradient(baseColor: number): void {
+		// Extract RGB components from the color
+		const r = (baseColor >> 16) & 0xff;
+		const g = (baseColor >> 8) & 0xff;
+		const b = baseColor & 0xff;
+		
+		// Create darker version for top (reduce brightness by 40%)
+		const darkR = Math.max(0, Math.floor(r * 0.6));
+		const darkG = Math.max(0, Math.floor(g * 0.6));
+		const darkB = Math.max(0, Math.floor(b * 0.6));
+		const darkColor = (darkR << 16) | (darkG << 8) | darkB;
+		
+		// Create lighter version for bottom (increase brightness by 20%)
+		const lightR = Math.min(255, Math.floor(r * 1.2));
+		const lightG = Math.min(255, Math.floor(g * 1.2));
+		const lightB = Math.min(255, Math.floor(b * 1.2));
+		const lightColor = (lightR << 16) | (lightG << 8) | lightB;
+		
+		// Create gradient using Graphics
+		const gradient = this.add.graphics();
+		const height = 768;
+		const width = 1024;
+		const steps = 50; // Number of gradient steps for smooth transition
+		
+		for (let i = 0; i < steps; i++) {
+			const y = (i / steps) * height;
+			const progress = i / (steps - 1);
+			
+			// Interpolate between dark and light colors
+			const currentR = Math.floor(darkR + (lightR - darkR) * progress);
+			const currentG = Math.floor(darkG + (lightG - darkG) * progress);
+			const currentB = Math.floor(darkB + (lightB - darkB) * progress);
+			const currentColor = (currentR << 16) | (currentG << 8) | currentB;
+			
+			gradient.fillStyle(currentColor, 1);
+			gradient.fillRect(0, y, width, height / steps + 1);
+		}
+		
+		gradient.setDepth(-1); // Place behind everything
 	}
 
 	private setupNavigation(): void {
