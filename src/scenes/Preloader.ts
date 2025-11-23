@@ -18,8 +18,6 @@ export class Preloader extends Scene {
 		this.load.image("bg-day", "images/background/bg.png");
 		this.load.image("bg-sunset", "images/background/bg-sunset.png");
 		this.load.image("bg-night", "images/background/bg-night.png");
-		this.load.image("bg-forest", "images/background/bg-forest.png");
-		this.load.image("bg-winter", "images/background/bg-winter.png");
 		
 		this.load.image("sky", "images/background/sky.png");
 		this.load.image("platform-sm", "images/platforms/platform-sm-i.png");
