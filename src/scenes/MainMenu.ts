@@ -15,12 +15,8 @@ export class MainMenu extends Scene {
 		// Create gradient overlay (dark on top, light below)
 		this.createGradient(bgColor);
 		
-		// Title logo with dynamic tint based on background (original color for sunny day)
-		const titleLogo = this.add.image(512, 350, "logo").setScale(0.3);
-		if (bgKey !== "bg-day") {
-			const titleColor = GameData.getTitleColor(bgKey);
-			titleLogo.setTint(titleColor);
-		}
+		// Title logo - always use original color
+		this.add.image(512, 350, "logo").setScale(0.3);
 		
 		// Play Button Text
 		this.add
