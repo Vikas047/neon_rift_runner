@@ -324,7 +324,7 @@ export class Shop extends Scene {
 
 		if (isOwned) {
 			// NFT ID - Top Center (higher for backgrounds)
-			const nftY = item.type === "background" ? -90 : -75;
+			const nftY = item.type === "background" ? -100 : -75;
 			const nftText = this.add.text(0, nftY, item.price === 0 ? "DEFAULT" : `NFT: ${item.nftId}`, {
 				fontSize: "10px",
 				color: item.price === 0 ? "#888888" : "#00ffff",
@@ -333,7 +333,7 @@ export class Shop extends Scene {
 			cardComponents.push(nftText);
 
 			// Rarity Badge - Top Left (adjusted for backgrounds)
-			const rarityY = item.type === "background" ? -70 : -55;
+			const rarityY = item.type === "background" ? -80 : -55;
 			const rarityColor = RARITY_COLORS[item.rarity];
 			const rarityBg = this.add.rectangle(-90, rarityY, 70, 20, rarityColor);
 			const rarityText = this.add.text(-90, rarityY, item.rarity.toUpperCase(), {
