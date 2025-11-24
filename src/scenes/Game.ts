@@ -449,9 +449,11 @@ export class Game extends Scene {
 	}
 
 	private resetGame(): void {
-		this.scene.restart();
 		gameOver = false;
 		score = 0;
-		scoreText.setText("Score: " + score);
+		if (scoreText) {
+			scoreText.setText(score.toString());
+		}
+		this.scene.restart();
 	}
 }
