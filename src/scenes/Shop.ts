@@ -234,6 +234,12 @@ export class Shop extends Scene {
 			this.itemsContainer.destroy();
 		}
 		
+		// Clean up any existing loading text
+		if (this.loadingText) {
+			this.loadingText.destroy();
+			this.loadingText = null;
+		}
+		
 		// Reset scroll
 		this.scrollY = 0;
 
@@ -306,12 +312,12 @@ export class Shop extends Scene {
 			} else {
 				this.cachedBackgroundsData = itemCards;
 			}
-			
-			// Remove loading text
-			if (this.loadingText) {
-				this.loadingText.destroy();
-				this.loadingText = null;
-			}
+		}
+		
+		// Always remove loading text after data is ready
+		if (this.loadingText) {
+			this.loadingText.destroy();
+			this.loadingText = null;
 		}
 
 		let x = 250;
