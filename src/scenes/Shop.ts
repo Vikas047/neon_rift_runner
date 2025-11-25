@@ -26,9 +26,11 @@ export class Shop extends Scene {
 	private inputText: Phaser.GameObjects.Text | null = null;
 	private isInputFocused: boolean = false;
 	
-	// Cache for NFT data
+	// Cache for NFT data and prices
 	private cachedSkinsData: { item: ShopItem; nftId: string }[] | null = null;
 	private cachedBackgroundsData: { item: ShopItem; nftId: string }[] | null = null;
+	private cachedSkinsPrice: number | null = null;
+	private cachedBackgroundsPrice: number | null = null;
 	private loadingText: Phaser.GameObjects.Text | null = null;
 
 	constructor() {
@@ -254,13 +256,17 @@ export class Shop extends Scene {
 
 		const allItems = type === "skins" ? SKINS : BACKGROUNDS;
 		
-		// Check cache first
+		// Check cache first (both data AND price must be cached)
 		const cachedData = type === "skins" ? this.cachedSkinsData : this.cachedBackgroundsData;
-		let itemCards: { item: ShopItem; nftId: string }[] = [];
+		const cachedPrice = type === "skins" ? this.cachedSkinsPrice : this.cachedBackgroundsPrice;
 		
-		if (cachedData !== null) {
-			// Use cached data
+		let itemCards: { item: ShopItem; nftId: string }[] = [];
+		let mysteryPrice: number;
+		
+		if (cachedData !== null && cachedPrice !== null) {
+			// Use cached data and price - NO async operations, instant render
 			itemCards = cachedData;
+			mysteryPrice = cachedPrice;
 		} else {
 			// Show loading text
 			this.loadingText = this.add.text(512, 450, "Loading...", {
@@ -306,21 +312,23 @@ export class Shop extends Scene {
 				}
 			}
 			
-			// Cache the data
+			// Calculate price based on owned count
+			mysteryPrice = await this.getDynamicPrice(type);
+			
+			// Cache both data and price
 			if (type === "skins") {
 				this.cachedSkinsData = itemCards;
+				this.cachedSkinsPrice = mysteryPrice;
 			} else {
 				this.cachedBackgroundsData = itemCards;
+				this.cachedBackgroundsPrice = mysteryPrice;
 			}
-		}
-		
-		// Get mystery card price BEFORE rendering anything (to avoid delay)
-		const mysteryPrice = await this.getDynamicPrice(type);
-		
-		// Always remove loading text after data is ready
-		if (this.loadingText) {
-			this.loadingText.destroy();
-			this.loadingText = null;
+			
+			// Remove loading text
+			if (this.loadingText) {
+				this.loadingText.destroy();
+				this.loadingText = null;
+			}
 		}
 
 		let x = 250;
@@ -591,6 +599,8 @@ export class Shop extends Scene {
 			// Invalidate cache to force re-fetch
 			this.cachedSkinsData = null;
 			this.cachedBackgroundsData = null;
+			this.cachedSkinsPrice = null;
+			this.cachedBackgroundsPrice = null;
 			
 			// Refresh UI to show new NFT
 			await this.showItems(this.currentTab);
