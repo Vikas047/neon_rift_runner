@@ -28,13 +28,13 @@ export const RARITY_COLORS: Record<Rarity, number> = {
 export const SKINS: ShopItem[] = [
 	{
 		id: "skin-blue",
-		name: "Classic Blue",
-		price: 0,
+		name: "Neon Pulse",
+		price: 100,
 		type: "skin",
 		assetKey: "dude",
-		lore: "The original runner. Forged in the pixel fires of 1985, he seeks only the highest platforms.",
+		lore: "A blazing trail of cobalt energy. He vibrates with synth beats and outruns the darkness.",
 		nftId: "GENESIS-001",
-		rarity: "common",
+		rarity: "rare",
 	},
 	{
 		id: "skin-red",
