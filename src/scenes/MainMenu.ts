@@ -46,6 +46,12 @@ export class MainMenu extends Scene {
 			.setInteractive({ cursor: "pointer" });
 
 		shopBtn.on("pointerdown", () => {
+			// Check wallet connection before allowing shop access
+			const verification = WalletManager.verifyWalletForAction();
+			if (!verification.valid) {
+				WalletUI.showConnectionModal(this, `${verification.message}\n\nYou need to connect your wallet to access the shop.`);
+				return;
+			}
 			this.scene.start("Shop");
 		});
 

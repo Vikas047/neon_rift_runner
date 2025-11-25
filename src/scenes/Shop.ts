@@ -32,6 +32,7 @@ export class Shop extends Scene {
 	private cachedSkinsPrice: number | null = null;
 	private cachedBackgroundsPrice: number | null = null;
 	private loadingText: Phaser.GameObjects.Text | null = null;
+	private walletChangeUnsubscribe: (() => void) | null = null;
 
 	constructor() {
 		super("Shop");
@@ -90,6 +91,18 @@ export class Shop extends Scene {
 		
 		// Check wallet connection on scene start
 		WalletManager.checkConnection();
+		
+		// Listen for wallet changes (connect/disconnect/switch)
+		this.walletChangeUnsubscribe = WalletManager.onWalletChange((walletInfo) => {
+			// Invalidate cache when wallet state changes
+			this.cachedSkinsData = null;
+			this.cachedBackgroundsData = null;
+			this.cachedSkinsPrice = null;
+			this.cachedBackgroundsPrice = null;
+			
+			// Refetch data for current tab
+			this.showItems(this.currentTab);
+		});
 		
 		// Scroll Setup
 		this.input.on("wheel", (pointer: any, gameObjects: any, deltaX: number, deltaY: number) => {
@@ -1040,6 +1053,14 @@ export class Shop extends Scene {
 			this.inputText = null;
 			this.recipientAddress = "";
 			this.isInputFocused = false;
+		}
+	}
+
+	shutdown(): void {
+		// Clean up wallet change listener
+		if (this.walletChangeUnsubscribe) {
+			this.walletChangeUnsubscribe();
+			this.walletChangeUnsubscribe = null;
 		}
 	}
 }
