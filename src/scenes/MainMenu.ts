@@ -16,7 +16,7 @@ export class MainMenu extends Scene {
 		this.createGradient(bgColor);
 		
 		// Title logo - always use original color
-		this.add.image(512, 350, "logo").setScale(0.3);
+		this.add.image(512, 330, "logo").setScale(0.45);
 		
 		// Play Button Text
 		this.add
