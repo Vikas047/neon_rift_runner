@@ -108,7 +108,7 @@ export class Shop extends Scene {
 			}
 		});
 
-		// Create Mask for scrolling
+		// Create Mask for scrolling (before showing items)
 		this.maskGraphics = this.make.graphics({});
 		this.maskGraphics.fillStyle(0xffffff);
 		this.maskGraphics.fillRect(0, 220, 1024, 548); // Visible area below tabs
@@ -233,9 +233,13 @@ export class Shop extends Scene {
 		this.scrollY = 0;
 
 		this.itemsContainer = this.add.container(0, 0);
-		// Apply mask
-		const mask = this.maskGraphics.createGeometryMask();
-		this.itemsContainer.setMask(mask);
+		// Apply mask - check if maskGraphics exists
+		if (this.maskGraphics) {
+			const mask = this.maskGraphics.createGeometryMask();
+			this.itemsContainer.setMask(mask);
+		} else {
+			console.error("Mask graphics not initialized!");
+		}
 
 		const allItems = type === "skins" ? SKINS : BACKGROUNDS;
 		
