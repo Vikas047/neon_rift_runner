@@ -15,7 +15,8 @@ module.exports = {
 	output: {
 		path: path.resolve(process.cwd(), "dist"),
 		filename: "./bundle.min.js",
-		publicPath: "/Neon-Rift-Runner/",
+		// Use root path for Vercel (or set PUBLIC_PATH env var for custom path)
+		publicPath: process.env.PUBLIC_PATH || "/",
 	},
 	devtool: false,
 	performance: {

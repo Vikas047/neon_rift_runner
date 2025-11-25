@@ -1,0 +1,6 @@
+node_modules
+.git
+neon_rift_runner_nft
+*.md
+!README.md
+
