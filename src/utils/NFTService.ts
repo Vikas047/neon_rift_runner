@@ -297,9 +297,37 @@ export class NFTService {
 			return [];
 		}
 	}
+	// Transfer an NFT
+	static async transferNFT(nftId: string, recipientAddress: string): Promise<{ success: boolean; error?: string }> {
+		try {
+			const { provider } = await this.getWalletAndProvider();
+			const tx = new Transaction();
+
+			tx.transferObjects([tx.object(nftId)], tx.pure.address(recipientAddress));
+
+			await provider.signAndExecuteTransactionBlock({
+				transactionBlock: tx,
+				options: {
+					showEffects: true,
+				},
+			});
+
+			return { success: true };
+		} catch (error: any) {
+			console.error("Transfer NFT error:", error);
+			return {
+				success: false,
+				error: error?.message || "Failed to transfer NFT"
+			};
+		}
+	}
 }
 
 // Export convenience functions for Shop
+export async function transferNFT(nftId: string, recipientAddress: string): Promise<{ success: boolean; error?: string }> {
+	return await NFTService.transferNFT(nftId, recipientAddress);
+}
+
 export async function mintSkinNFT(item: any): Promise<{ success: boolean; nftId?: string; error?: string }> {
 	const rarityMap: Record<string, number> = {
 		common: 1,

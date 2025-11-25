@@ -2,7 +2,7 @@ import { Scene } from "phaser";
 import { GameData, SKINS, BACKGROUNDS, ShopItem, RARITY_COLORS, Rarity } from "../utils/GameData";
 import { WalletUI } from "../utils/WalletUI";
 import { WalletManager } from "../utils/WalletManager";
-import { mintSkinNFT, mintBackgroundNFT, fetchOwnedNFTs, getPackageId } from "../utils/NFTService";
+import { mintSkinNFT, mintBackgroundNFT, fetchOwnedNFTs, getPackageId, transferNFT } from "../utils/NFTService";
 
 export class Shop extends Scene {
 	private balanceText: Phaser.GameObjects.Text;
@@ -877,7 +877,7 @@ export class Shop extends Scene {
 		input.style.position = "absolute";
 		input.style.left = "50%";
 		input.style.top = "50%"; // Game center is 384
-		input.style.transform = "translate(-50%, 0px)"; // Offset to y=380 (moved up 20px)
+		input.style.transform = "translate(-50%, 0havepx)"; // Offset to y=380 (moved up 20px)
 		input.style.width = "400px";
 		input.style.height = "40px";
 		input.style.boxSizing = "border-box";
@@ -971,15 +971,62 @@ export class Shop extends Scene {
 		(this.transferModal as any).cleanup = cleanup;
 	}
 
-	private executeTransfer(item: ShopItem, nftId: string, address: string): void {
-		// Here you would implement the actual transfer logic
-		alert(`Transferring ${item.name} (${nftId}) to ${address}`);
-		// TODO: Implement actual transfer logic
-		// This would typically:
-		// 1. Remove the NFT from the current owner's inventory
-		// 2. Add it to the recipient's inventory
-		// 3. Update blockchain/NFT registry if applicable
-		this.closeTransferModal();
+	private async executeTransfer(item: ShopItem, nftId: string, address: string): Promise<void> {
+		// Show loading state
+		if (this.transferModal) {
+			// Find title text object (it's the 3rd element added: overlay, modalBg, title...)
+			// Better to find by type or content if possible, but list index is fragile if order changes.
+			// Looking at openTransferModal, title is index 2.
+			const title = this.transferModal.getAt(2) as Phaser.GameObjects.Text;
+			if (title && title.setText) title.setText("Transferring...");
+		}
+
+		try {
+			const result = await transferNFT(nftId, address);
+			
+			if (result.success) {
+				// Invalidate cache
+				this.cachedSkinsData = null;
+				this.cachedBackgroundsData = null;
+				this.cachedSkinsPrice = null;
+				this.cachedBackgroundsPrice = null;
+				
+				// Close modal and refresh
+				this.closeTransferModal();
+				await this.showItems(this.currentTab);
+				
+				// Show success message
+				const successText = this.add.text(512, 384, "Transfer Successful!", {
+					fontSize: "32px",
+					color: "#00ff00",
+					fontStyle: "bold",
+					stroke: "#000000",
+					strokeThickness: 6
+				}).setOrigin(0.5).setScrollFactor(0).setDepth(2000);
+				
+				this.tweens.add({
+					targets: successText,
+					alpha: 0,
+					y: 300,
+					duration: 3000,
+					onComplete: () => successText.destroy()
+				});
+			} else {
+				// Show error
+				alert(`Transfer failed: ${result.error}`);
+				if (this.transferModal) {
+					const title = this.transferModal.getAt(2) as Phaser.GameObjects.Text;
+					if (title && title.setText) title.setText("Transfer NFT");
+				}
+			}
+		} catch (error: any) {
+			console.error("Transfer error:", error);
+			alert(`Transfer error: ${error.message}`);
+			if (this.transferModal) {
+				const title = this.transferModal.getAt(2) as Phaser.GameObjects.Text;
+				if (title && title.setText) title.setText("Transfer NFT");
+			}
+		}
 	}
 
 	private closeTransferModal(): void {
