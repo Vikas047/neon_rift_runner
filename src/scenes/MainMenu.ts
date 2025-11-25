@@ -1,5 +1,7 @@
 import { Scene } from "phaser";
 import { GameData } from "../utils/GameData";
+import { WalletUI } from "../utils/WalletUI";
+import { WalletManager } from "../utils/WalletManager";
 
 export class MainMenu extends Scene {
 	constructor() {
@@ -46,6 +48,12 @@ export class MainMenu extends Scene {
 		shopBtn.on("pointerdown", () => {
 			this.scene.start("Shop");
 		});
+
+		// Wallet Connect Button (top right)
+		WalletUI.createWalletButton(this);
+
+		// Check wallet connection on scene start
+		WalletManager.checkConnection();
 
 		// Navigation
 		this.setupNavigation();
@@ -101,7 +109,10 @@ export class MainMenu extends Scene {
 			.setInteractive({ cursor: "pointer" });
 
 		startArea.on("pointerdown", () => {
-			this.scene.start("Game");
+			// Check wallet connection before starting game
+			WalletUI.requireWallet(this, () => {
+				this.scene.start("Game");
+			}, "play the game");
 		});
 	}
 }

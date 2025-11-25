@@ -1,5 +1,7 @@
 import { Scene } from "phaser";
 import { GameData } from "../utils/GameData";
+import { WalletUI } from "../utils/WalletUI";
+import { WalletManager } from "../utils/WalletManager";
 
 let player: Phaser.Physics.Arcade.Sprite;
 let platforms: Phaser.Physics.Arcade.StaticGroup;
@@ -35,6 +37,17 @@ export class Game extends Scene {
 	}
 
 	create(): void {
+		// Check wallet connection before starting game
+		const verification = WalletManager.verifyWalletForAction();
+		if (!verification.valid) {
+			WalletUI.showConnectionModal(this, `${verification.message}\n\nYou need to connect your wallet to play the game.`);
+			// Return to main menu after a delay
+			this.time.delayedCall(3000, () => {
+				this.scene.start("MainMenu");
+			});
+			return;
+		}
+		
 		// Background - always fill the screen
 		const bgKey = GameData.getEquippedBackground();
 		const bgColor = GameData.getBackgroundColor(bgKey);

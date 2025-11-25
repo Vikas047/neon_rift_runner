@@ -28,6 +28,7 @@
 		"webpack-merge": "^5.10.0"
 	},
 	"dependencies": {
+		"@onelabs/sui": "^1.26.2",
 		"phaser": "^3.80.1"
 	}
 }

@@ -1,0 +1,269 @@
+UPDATING GIT DEPENDENCY https://github.com/one-chain-labs/onechain.git
+INCLUDING DEPENDENCY One
+INCLUDING DEPENDENCY MoveStdlib
+BUILDING neon_rift_runner_nft
+warning[W02021]: duplicate alias
+  ┌─ /home/preyanshu/TS-Phaser-Game-Jumper/neon_rift_runner_nft/sources/skin_nft.move:3:19
+  │
+3 │ use one::object::{UID, ID};
+  │                   ^^^ Unnecessary alias 'UID' for module member 'one::object::UID'. This alias is provided by default
+  │
+  = This warning can be suppressed with '#[allow(duplicate_alias)]' applied to the 'module' or module member ('const', 'fun', or 'struct')
+
+warning[W02021]: duplicate alias
+  ┌─ /home/preyanshu/TS-Phaser-Game-Jumper/neon_rift_runner_nft/sources/skin_nft.move:3:24
+  │
+3 │ use one::object::{UID, ID};
+  │                        ^^ Unnecessary alias 'ID' for module member 'one::object::ID'. This alias is provided by default
+  │
+  = This warning can be suppressed with '#[allow(duplicate_alias)]' applied to the 'module' or module member ('const', 'fun', or 'struct')
+
+warning[W02021]: duplicate alias
+  ┌─ /home/preyanshu/TS-Phaser-Game-Jumper/neon_rift_runner_nft/sources/skin_nft.move:4:10
+  │
+4 │ use one::transfer;
+  │          ^^^^^^^^ Unnecessary alias 'transfer' for module 'one::transfer'. This alias is provided by default
+  │
+  = This warning can be suppressed with '#[allow(duplicate_alias)]' applied to the 'module' or module member ('const', 'fun', or 'struct')
+
+warning[W09001]: unused alias
+  ┌─ /home/preyanshu/TS-Phaser-Game-Jumper/neon_rift_runner_nft/sources/skin_nft.move:4:10
+  │
+4 │ use one::transfer;
+  │          ^^^^^^^^ Unused 'use' of alias 'transfer'. Consider removing it
+  │
+  = This warning can be suppressed with '#[allow(unused_use)]' applied to the 'module' or module member ('const', 'fun', or 'struct')
+
+warning[W02021]: duplicate alias
+  ┌─ /home/preyanshu/TS-Phaser-Game-Jumper/neon_rift_runner_nft/sources/skin_nft.move:5:22
+  │
+5 │ use one::tx_context::TxContext;
+  │                      ^^^^^^^^^ Unnecessary alias 'TxContext' for module member 'one::tx_context::TxContext'. This alias is provided by default
+  │
+  = This warning can be suppressed with '#[allow(duplicate_alias)]' applied to the 'module' or module member ('const', 'fun', or 'struct')
+
+warning[W09001]: unused alias
+  ┌─ /home/preyanshu/TS-Phaser-Game-Jumper/neon_rift_runner_nft/sources/skin_nft.move:7:10
+  │
+7 │ use one::event;
+  │          ^^^^^ Unused 'use' of alias 'event'. Consider removing it
+  │
+  = This warning can be suppressed with '#[allow(unused_use)]' applied to the 'module' or module member ('const', 'fun', or 'struct')
+
+warning[W02021]: duplicate alias
+  ┌─ /home/preyanshu/TS-Phaser-Game-Jumper/neon_rift_runner_nft/sources/background_nft.move:3:19
+  │
+3 │ use one::object::{UID, ID};
+  │                   ^^^ Unnecessary alias 'UID' for module member 'one::object::UID'. This alias is provided by default
+  │
+  = This warning can be suppressed with '#[allow(duplicate_alias)]' applied to the 'module' or module member ('const', 'fun', or 'struct')
+
+warning[W02021]: duplicate alias
+  ┌─ /home/preyanshu/TS-Phaser-Game-Jumper/neon_rift_runner_nft/sources/background_nft.move:3:24
+  │
+3 │ use one::object::{UID, ID};
+  │                        ^^ Unnecessary alias 'ID' for module member 'one::object::ID'. This alias is provided by default
+  │
+  = This warning can be suppressed with '#[allow(duplicate_alias)]' applied to the 'module' or module member ('const', 'fun', or 'struct')
+
+warning[W02021]: duplicate alias
+  ┌─ /home/preyanshu/TS-Phaser-Game-Jumper/neon_rift_runner_nft/sources/background_nft.move:4:10
+  │
+4 │ use one::transfer;
+  │          ^^^^^^^^ Unnecessary alias 'transfer' for module 'one::transfer'. This alias is provided by default
+  │
+  = This warning can be suppressed with '#[allow(duplicate_alias)]' applied to the 'module' or module member ('const', 'fun', or 'struct')
+
+warning[W09001]: unused alias
+  ┌─ /home/preyanshu/TS-Phaser-Game-Jumper/neon_rift_runner_nft/sources/background_nft.move:4:10
+  │
+4 │ use one::transfer;
+  │          ^^^^^^^^ Unused 'use' of alias 'transfer'. Consider removing it
+  │
+  = This warning can be suppressed with '#[allow(unused_use)]' applied to the 'module' or module member ('const', 'fun', or 'struct')
+
+warning[W02021]: duplicate alias
+  ┌─ /home/preyanshu/TS-Phaser-Game-Jumper/neon_rift_runner_nft/sources/background_nft.move:5:22
+  │
+5 │ use one::tx_context::TxContext;
+  │                      ^^^^^^^^^ Unnecessary alias 'TxContext' for module member 'one::tx_context::TxContext'. This alias is provided by default
+  │
+  = This warning can be suppressed with '#[allow(duplicate_alias)]' applied to the 'module' or module member ('const', 'fun', or 'struct')
+
+warning[W09001]: unused alias
+  ┌─ /home/preyanshu/TS-Phaser-Game-Jumper/neon_rift_runner_nft/sources/background_nft.move:7:10
+  │
+7 │ use one::event;
+  │          ^^^^^ Unused 'use' of alias 'event'. Consider removing it
+  │
+  = This warning can be suppressed with '#[allow(unused_use)]' applied to the 'module' or module member ('const', 'fun', or 'struct')
+
+Successfully verified dependencies on-chain against source.
+{
+  "digest": "JButMW5YJkdTW98JVJgamKEeDCCR9eg7kU5piYoHZxEG",
+  "transaction": {
+    "data": {
+      "messageVersion": "v1",
+      "transaction": {
+        "kind": "ProgrammableTransaction",
+        "inputs": [
+          {
+            "type": "pure",
+            "valueType": "address",
+            "value": "0x2cd8bea3e85e771f882dc833b241472d282c23bc90f899e794ebcae5d60b53c1"
+          }
+        ],
+        "transactions": [
+          {
+            "Publish": [
+              "0x0000000000000000000000000000000000000000000000000000000000000001",
+              "0x0000000000000000000000000000000000000000000000000000000000000002"
+            ]
+          },
+          {
+            "TransferObjects": [
+              [
+                {
+                  "Result": 0
+                }
+              ],
+              {
+                "Input": 0
+              }
+            ]
+          }
+        ]
+      },
+      "sender": "0x2cd8bea3e85e771f882dc833b241472d282c23bc90f899e794ebcae5d60b53c1",
+      "gasData": {
+        "payment": [
+          {
+            "objectId": "0x180d8976106b1d001d8a6cdef55c97f0235ad77319a02f5a7c9d8b02086d20c5",
+            "version": 202275380,
+            "digest": "EsP98j4sEz1Jx66UJVNQ8zZJUA2ReQguvqE9VFS6a9CA"
+          }
+        ],
+        "owner": "0x2cd8bea3e85e771f882dc833b241472d282c23bc90f899e794ebcae5d60b53c1",
+        "price": "1000",
+        "budget": "21342000"
+      }
+    },
+    "txSignatures": [
+      "APBTC9IjY//9sEzVbxNYu3hLGuHtgxjFa++PHLP0Imt/kW4ePn+lJVUFto1kBq157unPyyRb5tU9J/Phg5ZfHQ2lrnmd7NiRugObWHndVLDPiQ787mxv/X4HLrcsudWnVg=="
+    ]
+  },
+  "effects": {
+    "messageVersion": "v1",
+    "status": {
+      "status": "success"
+    },
+    "executedEpoch": "131",
+    "gasUsed": {
+      "computationCost": "1000000",
+      "storageCost": "19342000",
+      "storageRebate": "978120",
+      "nonRefundableStorageFee": "9880"
+    },
+    "modifiedAtVersions": [
+      {
+        "objectId": "0x180d8976106b1d001d8a6cdef55c97f0235ad77319a02f5a7c9d8b02086d20c5",
+        "sequenceNumber": "202275380"
+      }
+    ],
+    "transactionDigest": "JButMW5YJkdTW98JVJgamKEeDCCR9eg7kU5piYoHZxEG",
+    "created": [
+      {
+        "owner": {
+          "AddressOwner": "0x2cd8bea3e85e771f882dc833b241472d282c23bc90f899e794ebcae5d60b53c1"
+        },
+        "reference": {
+          "objectId": "0x7cfb75dfa36af0d38b51f4a2ffd6ff8fd56bee031937837b8ee584d55cb39c6e",
+          "version": 202275381,
+          "digest": "BSaNMnFy9vSYxHSWXsYs16FoDtDf3Kzyv5SFNenoeuQA"
+        }
+      },
+      {
+        "owner": "Immutable",
+        "reference": {
+          "objectId": "0x9da588e412e32337eeadd07d62e40e0256adfaf5dadbbc13ea37e67fe3e9d608",
+          "version": 1,
+          "digest": "2ze2PX4bgATQynFbresMNkJJ1GRYaoKNo9W1WiDVoaJu"
+        }
+      }
+    ],
+    "mutated": [
+      {
+        "owner": {
+          "AddressOwner": "0x2cd8bea3e85e771f882dc833b241472d282c23bc90f899e794ebcae5d60b53c1"
+        },
+        "reference": {
+          "objectId": "0x180d8976106b1d001d8a6cdef55c97f0235ad77319a02f5a7c9d8b02086d20c5",
+          "version": 202275381,
+          "digest": "H7ieSBSLdRnMPLByjLvRob4Z38PT6bLA4U3rq6SW1AqD"
+        }
+      }
+    ],
+    "gasObject": {
+      "owner": {
+        "AddressOwner": "0x2cd8bea3e85e771f882dc833b241472d282c23bc90f899e794ebcae5d60b53c1"
+      },
+      "reference": {
+        "objectId": "0x180d8976106b1d001d8a6cdef55c97f0235ad77319a02f5a7c9d8b02086d20c5",
+        "version": 202275381,
+        "digest": "H7ieSBSLdRnMPLByjLvRob4Z38PT6bLA4U3rq6SW1AqD"
+      }
+    },
+    "dependencies": [
+      "iWTJTkrgNheSFPiD2aZ3mKFjxMA7NuHjNMa9vimaAig",
+      "BazzT6FMwS4Z56K5BF5h9nb8EmLQgDzbB5GrLLtZPDEx"
+    ]
+  },
+  "events": [],
+  "objectChanges": [
+    {
+      "type": "mutated",
+      "sender": "0x2cd8bea3e85e771f882dc833b241472d282c23bc90f899e794ebcae5d60b53c1",
+      "owner": {
+        "AddressOwner": "0x2cd8bea3e85e771f882dc833b241472d282c23bc90f899e794ebcae5d60b53c1"
+      },
+      "objectType": "0x2::coin::Coin<0x2::oct::OCT>",
+      "objectId": "0x180d8976106b1d001d8a6cdef55c97f0235ad77319a02f5a7c9d8b02086d20c5",
+      "version": "202275381",
+      "previousVersion": "202275380",
+      "digest": "H7ieSBSLdRnMPLByjLvRob4Z38PT6bLA4U3rq6SW1AqD"
+    },
+    {
+      "type": "created",
+      "sender": "0x2cd8bea3e85e771f882dc833b241472d282c23bc90f899e794ebcae5d60b53c1",
+      "owner": {
+        "AddressOwner": "0x2cd8bea3e85e771f882dc833b241472d282c23bc90f899e794ebcae5d60b53c1"
+      },
+      "objectType": "0x2::package::UpgradeCap",
+      "objectId": "0x7cfb75dfa36af0d38b51f4a2ffd6ff8fd56bee031937837b8ee584d55cb39c6e",
+      "version": "202275381",
+      "digest": "BSaNMnFy9vSYxHSWXsYs16FoDtDf3Kzyv5SFNenoeuQA"
+    },
+    {
+      "type": "published",
+      "packageId": "0x9da588e412e32337eeadd07d62e40e0256adfaf5dadbbc13ea37e67fe3e9d608",
+      "version": "1",
+      "digest": "2ze2PX4bgATQynFbresMNkJJ1GRYaoKNo9W1WiDVoaJu",
+      "modules": [
+        "background_nft",
+        "skin_nft"
+      ]
+    }
+  ],
+  "balanceChanges": [
+    {
+      "owner": {
+        "AddressOwner": "0x2cd8bea3e85e771f882dc833b241472d282c23bc90f899e794ebcae5d60b53c1"
+      },
+      "coinType": "0x2::oct::OCT",
+      "amount": "-19363880"
+    }
+  ],
+  "timestampMs": "1764094167998",
+  "confirmedLocalExecution": true,
+  "checkpoint": "52083685"
+}

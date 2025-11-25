@@ -1,5 +1,8 @@
 import { Scene } from "phaser";
 import { GameData, SKINS, BACKGROUNDS, ShopItem, RARITY_COLORS, Rarity } from "../utils/GameData";
+import { WalletUI } from "../utils/WalletUI";
+import { WalletManager } from "../utils/WalletManager";
+import { mintSkinNFT, mintBackgroundNFT, fetchOwnedNFTs, getPackageId } from "../utils/NFTService";
 
 export class Shop extends Scene {
 	private balanceText: Phaser.GameObjects.Text;
@@ -55,6 +58,9 @@ export class Shop extends Scene {
 
 		// Tabs
 		this.createTabs();
+		
+		// Load items (async - fetches from wallet)
+		this.showItems("skins");
 
 		// Back Button
 		const backButton = this.add
@@ -71,6 +77,12 @@ export class Shop extends Scene {
 		backButton.on("pointerdown", () => {
 			this.scene.start("MainMenu");
 		});
+		
+		// Wallet Connect Button (top right)
+		WalletUI.createWalletButton(this);
+		
+		// Check wallet connection on scene start
+		WalletManager.checkConnection();
 		
 		// Scroll Setup
 		this.input.on("wheel", (pointer: any, gameObjects: any, deltaX: number, deltaY: number) => {
@@ -105,7 +117,7 @@ export class Shop extends Scene {
 		this.scrollTrack = this.add.rectangle(1010, 494, 8, 548, 0x333333).setOrigin(0.5); // Center of track
 		this.scrollBar = this.add.rectangle(1010, 230, 8, 100, 0xaaaaaa).setOrigin(0.5, 0); // Top-aligned thumb
 
-		// Initial Content
+		// Initial Content (async - fetches from wallet)
 		this.showItems("skins");
 	}
 
@@ -172,26 +184,35 @@ export class Shop extends Scene {
 			.setOrigin(0.5)
 			.setInteractive({ cursor: "pointer" });
 
-		skinsTab.on("pointerdown", () => {
+		skinsTab.on("pointerdown", async () => {
 			this.currentTab = "skins";
 			skinsTab.setColor("#ffffff");
 			bgTab.setColor("#888888");
-			this.showItems("skins");
+			await this.showItems("skins");
 		});
 
-		bgTab.on("pointerdown", () => {
+		bgTab.on("pointerdown", async () => {
 			this.currentTab = "backgrounds";
 			bgTab.setColor("#ffffff");
 			skinsTab.setColor("#888888");
-			this.showItems("backgrounds");
+			await this.showItems("backgrounds");
 		});
 	}
 
-	private getDynamicPrice(type: "skins" | "backgrounds"): number {
-		// Count all owned items (including duplicates)
-		const itemType = type === "skins" ? "skin" : "background";
-		const ownedItems = GameData.getOwnedItemsByType(itemType);
-		const ownedCount = ownedItems.length;
+	private async getDynamicPrice(type: "skins" | "backgrounds"): Promise<number> {
+		// Count all owned items from wallet (including duplicates)
+		let ownedCount = 0;
+		
+		if (WalletManager.isConnected() && getPackageId()) {
+			// Fetch from blockchain
+			const ownedNFTs = await fetchOwnedNFTs();
+			ownedCount = type === "skins" ? ownedNFTs.skins.length : ownedNFTs.backgrounds.length;
+		} else {
+			// Fallback to localStorage
+			const itemType = type === "skins" ? "skin" : "background";
+			const ownedItems = GameData.getOwnedItemsByType(itemType);
+			ownedCount = ownedItems.length;
+		}
 		
 		// Aggressive Scaling
 		// Skins: Base 500 + (Owned - 1) * 750
@@ -203,7 +224,7 @@ export class Shop extends Scene {
 		}
 	}
 
-	private showItems(type: "skins" | "backgrounds"): void {
+	private async showItems(type: "skins" | "backgrounds"): Promise<void> {
 		if (this.itemsContainer) {
 			this.itemsContainer.destroy();
 		}
@@ -217,15 +238,31 @@ export class Shop extends Scene {
 		this.itemsContainer.setMask(mask);
 
 		const allItems = type === "skins" ? SKINS : BACKGROUNDS;
-		// Get all owned items (including duplicates) with their NFT IDs
-		const itemType = type === "skins" ? "skin" : "background";
-		const ownedItems = GameData.getOwnedItemsByType(itemType);
 		
-		// Create cards for each owned item instance
-		const itemCards: { item: ShopItem; nftId: string }[] = ownedItems.map(owned => {
-			const item = allItems.find(i => i.id === owned.itemId);
-			return item ? { item, nftId: owned.nftId } : null;
-		}).filter(card => card !== null) as { item: ShopItem; nftId: string }[];
+		// Fetch owned NFTs from wallet instead of localStorage
+		let itemCards: { item: ShopItem; nftId: string }[] = [];
+		
+		if (WalletManager.isConnected() && getPackageId()) {
+			// Fetch from blockchain
+			const ownedNFTs = await fetchOwnedNFTs();
+			const nftList = type === "skins" ? ownedNFTs.skins : ownedNFTs.backgrounds;
+			
+			itemCards = nftList.map(nft => {
+				// Match by skinId or backgroundId from NFT to item id
+				const itemId = type === "skins" ? nft.skinId : nft.backgroundId;
+				const item = allItems.find(i => i.id === itemId);
+				return item ? { item, nftId: nft.nftId } : null;
+			}).filter(card => card !== null) as { item: ShopItem; nftId: string }[];
+		} else {
+			// Fallback to localStorage if wallet not connected or contract not deployed
+			const itemType = type === "skins" ? "skin" : "background";
+			const ownedItems = GameData.getOwnedItemsByType(itemType);
+			
+			itemCards = ownedItems.map(owned => {
+				const item = allItems.find(i => i.id === owned.itemId);
+				return item ? { item, nftId: owned.nftId } : null;
+			}).filter(card => card !== null) as { item: ShopItem; nftId: string }[];
+		}
 
 		let x = 250;
 		let y = 400; // Base Y for grid
@@ -244,7 +281,7 @@ export class Shop extends Scene {
 		});
 		
 		// Always show "Mystery Card" (unlimited unlocks allowed)
-		const price = this.getDynamicPrice(type);
+		const price = await this.getDynamicPrice(type);
 		
 		// Calculate position for the next card in the grid
 		const index = itemCards.length; // Next available index
@@ -295,8 +332,8 @@ export class Shop extends Scene {
 		}).setOrigin(0.5);
 
 		// Unlock Button
-		const unlockBtn = this.createButton(0, 100, "UNLOCK", 0xffb600, () => {
-			this.buyRandomItem(type);
+		const unlockBtn = this.createButton(0, 100, "UNLOCK", 0xffb600, async () => {
+			await this.buyRandomItem(type);
 		});
 
 		const card = this.add.container(x, y, [bg, preview, titleText, priceText, unlockBtn]);
@@ -394,13 +431,13 @@ export class Shop extends Scene {
 			if (isEquipped) {
 				actionBtn = this.createButton(0, btnY, "EQUIPPED", 0x00ff00, null);
 			} else {
-				actionBtn = this.createButton(0, btnY, "EQUIP", 0x4a90e2, () => {
+				actionBtn = this.createButton(0, btnY, "EQUIP", 0x4a90e2, async () => {
 					GameData.equipItem(item.id, item.type);
 					// Update background immediately if a background was equipped
 					if (item.type === "background") {
 						this.updateBackground();
 					}
-					this.showItems(this.currentTab); // Refresh
+					await this.showItems(this.currentTab); // Refresh
 				});
 			}
 			cardComponents.push(actionBtn);
@@ -425,8 +462,15 @@ export class Shop extends Scene {
 		this.itemsContainer.add(card);
 	}
 
-	private buyRandomItem(type: "skins" | "backgrounds"): void {
-		const price = this.getDynamicPrice(type);
+	private async buyRandomItem(type: "skins" | "backgrounds"): Promise<void> {
+		// Check wallet connection before minting
+		const verification = WalletManager.verifyWalletForAction();
+		if (!verification.valid) {
+			WalletUI.showConnectionModal(this, `${verification.message}\n\nYou need to connect your wallet to mint NFTs.`);
+			return;
+		}
+		
+		const price = await this.getDynamicPrice(type);
 		
 		if (GameData.getCoins() < price) {
 			this.cameras.main.shake(100, 0.01); // Not enough money
@@ -438,41 +482,197 @@ export class Shop extends Scene {
 		// Use weighted random selection from ALL items (can get duplicates)
 		const randomItem = GameData.getWeightedRandomItem(items);
 		
-		if (GameData.removeCoins(price)) {
-			const wasAlreadyOwned = GameData.hasItem(randomItem.id);
+		// Show loading/minting message
+		const mintingText = this.add.text(512, 384, "Minting NFT...", {
+			fontSize: "32px",
+			color: "#ffff00",
+			fontStyle: "bold",
+			stroke: "#000000",
+			strokeThickness: 6,
+		}).setOrigin(0.5).setScrollFactor(0).setDepth(3000);
+		
+		try {
+			// Remove coins first
+			if (!GameData.removeCoins(price)) {
+				mintingText.destroy();
+				return;
+			}
 			
-			// Unlock item (will skip if already owned, but still allows unlimited unlocks)
-			GameData.unlockItem(randomItem.id);
-			
-			// Refresh UI
 			this.balanceText.setText(`Coins: ${GameData.getCoins()}`);
-			this.showItems(this.currentTab);
 			
-			// Show feedback with item name
-			const message = wasAlreadyOwned 
-				? `Already own: ${randomItem.name}` 
-				: `Unlocked: ${randomItem.name}!`;
+			// Mint NFT on-chain
+			let mintResult;
+			if (type === "skins") {
+				mintResult = await mintSkinNFT(randomItem);
+			} else {
+				mintResult = await mintBackgroundNFT(randomItem);
+			}
 			
-			const feedbackText = this.add.text(512, 384, message, {
-				fontSize: "32px",
-				color: wasAlreadyOwned ? "#ffaa00" : "#00ff00",
+			mintingText.destroy();
+			
+			if (!mintResult.success) {
+				// Refund coins if minting failed
+				GameData.addCoins(price);
+				this.balanceText.setText(`Coins: ${GameData.getCoins()}`);
+				
+				const errorText = this.add.text(512, 384, `Minting failed: ${mintResult.error}`, {
+					fontSize: "24px",
+					color: "#ff0000",
+					fontStyle: "bold",
+					stroke: "#000000",
+					strokeThickness: 6,
+				}).setOrigin(0.5).setScrollFactor(0);
+				
+				this.tweens.add({
+					targets: errorText,
+					alpha: 0,
+					y: 300,
+					duration: 3000,
+					onComplete: () => errorText.destroy()
+				});
+				return;
+			}
+			
+			// Show reveal animation
+			await this.revealNFT(randomItem, mintResult.nftId!, type);
+			
+			// Refresh UI to show new NFT
+			await this.showItems(this.currentTab);
+			
+		} catch (error: any) {
+			mintingText.destroy();
+			console.error("Buy random item error:", error);
+			
+			// Refund coins on error
+			GameData.addCoins(price);
+			this.balanceText.setText(`Coins: ${GameData.getCoins()}`);
+			
+			const errorText = this.add.text(512, 384, `Error: ${error.message || "Failed to mint NFT"}`, {
+				fontSize: "24px",
+				color: "#ff0000",
 				fontStyle: "bold",
 				stroke: "#000000",
 				strokeThickness: 6,
 			}).setOrigin(0.5).setScrollFactor(0);
 			
-			// Animate and remove
 			this.tweens.add({
-				targets: feedbackText,
+				targets: errorText,
 				alpha: 0,
 				y: 300,
-				duration: 2000,
-				onComplete: () => feedbackText.destroy()
+				duration: 3000,
+				onComplete: () => errorText.destroy()
 			});
-			
-			// Flash effect
-			this.cameras.main.flash(200, 255, 255, 255);
 		}
+	}
+	
+	// Reveal NFT with animation
+	private async revealNFT(item: ShopItem, nftId: string, type: "skins" | "backgrounds"): Promise<void> {
+		// Create reveal modal
+		const modalBg = this.add.rectangle(512, 384, 1024, 768, 0x000000, 0.9);
+		modalBg.setDepth(3000);
+		modalBg.setInteractive();
+
+		const modalContainer = this.add.container(512, 384);
+		modalContainer.setDepth(3001);
+
+		const modal = this.add.rectangle(0, 0, 500, 400, 0x222222, 1);
+		modal.setStrokeStyle(3, 0xffffff);
+
+		const title = this.add.text(0, -150, "🎉 NFT MINTED! 🎉", {
+			fontFamily: "Arial Black",
+			fontSize: 36,
+			color: "#00ff00",
+		});
+		title.setOrigin(0.5);
+
+		// Show item preview (initially hidden/silhouette)
+		let preview: Phaser.GameObjects.Image | Phaser.GameObjects.Sprite;
+		if (type === "skins") {
+			preview = this.add.sprite(0, -50, item.assetKey, 4);
+			preview.setScale(2);
+		} else {
+			preview = this.add.image(0, -50, item.assetKey);
+			preview.setDisplaySize(200, 150);
+		}
+		preview.setTint(0x000000); // Start as silhouette
+		
+		// Item name
+		const nameText = this.add.text(0, 50, "???", {
+			fontFamily: "Arial Black",
+			fontSize: 28,
+			color: "#ffffff",
+		});
+		nameText.setOrigin(0.5);
+
+		// NFT ID
+		const nftIdText = this.add.text(0, 90, `NFT ID: ${nftId.slice(0, 10)}...`, {
+			fontFamily: "Courier New",
+			fontSize: 14,
+			color: "#cccccc",
+		});
+		nftIdText.setOrigin(0.5);
+
+		// Rarity badge (initially hidden)
+		const rarityText = this.add.text(0, 120, "", {
+			fontFamily: "Arial Black",
+			fontSize: 20,
+			color: "#ffffff",
+		});
+		rarityText.setOrigin(0.5);
+		rarityText.setVisible(false);
+
+		modalContainer.add([modal, title, preview, nameText, nftIdText, rarityText]);
+
+		// Reveal animation
+		this.tweens.add({
+			targets: preview,
+			alpha: 0,
+			duration: 500,
+			onComplete: () => {
+				// Reveal the actual item
+				preview.setTint(0xffffff); // Remove silhouette
+				nameText.setText(item.name);
+				
+				// Show rarity
+				const rarityColorNum = RARITY_COLORS[item.rarity as Rarity] || 0xffffff;
+				const rarityColorStr = "#" + rarityColorNum.toString(16).padStart(6, "0");
+				rarityText.setText(item.rarity.toUpperCase());
+				rarityText.setColor(rarityColorStr);
+				rarityText.setVisible(true);
+				
+				// Fade in
+				this.tweens.add({
+					targets: [preview, nameText, rarityText],
+					alpha: 1,
+					duration: 500,
+				});
+			}
+		});
+
+		// Close button
+		const closeBtn = this.add.rectangle(0, 160, 150, 40, 0x4CAF50, 1);
+		closeBtn.setStrokeStyle(2, 0xffffff);
+		closeBtn.setInteractive({ cursor: "pointer" });
+
+		const closeText = this.add.text(0, 160, "Continue", {
+			fontFamily: "Arial Black",
+			fontSize: 20,
+			color: "#ffffff",
+		});
+		closeText.setOrigin(0.5);
+
+		modalContainer.add([closeBtn, closeText]);
+
+		const closeModal = () => {
+			modalBg.destroy();
+			modalContainer.destroy();
+		};
+
+		closeBtn.on("pointerdown", closeModal);
+		modalBg.on("pointerdown", closeModal);
+		
+		// Auto-close after 5 seconds
+		this.time.delayedCall(5000, closeModal);
 	}
 
 	private createButton(x: number, y: number, text: string, color: number, callback: (() => void) | null): Phaser.GameObjects.Container {
