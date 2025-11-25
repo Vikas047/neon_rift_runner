@@ -452,14 +452,20 @@ export class Shop extends Scene {
 				cardComponents.push(transferBtn, transferIcon);
 			}
 
-			// NFT ID - Top Center (wrap if too long)
+			// NFT ID - Top Center (shortened for display)
 			const nftY = -115;
-			const nftText = this.add.text(0, nftY, displayNftId === "default" ? "DEFAULT" : `NFT: ${displayNftId}`, {
+			let displayIdText = "DEFAULT";
+			if (displayNftId !== "default") {
+				// Shorten ID: 0x1234...5678
+				const start = displayNftId.substring(0, 6);
+				const end = displayNftId.substring(displayNftId.length - 4);
+				displayIdText = `NFT: ${start}...${end}`;
+			}
+
+			const nftText = this.add.text(0, nftY, displayIdText, {
 				fontSize: "10px",
 				color: displayNftId === "default" ? "#888888" : "#00ffff",
 				fontStyle: "bold",
-				align: "center",
-				wordWrap: { width: 200 }
 			}).setOrigin(0.5);
 			cardComponents.push(nftText);
 
