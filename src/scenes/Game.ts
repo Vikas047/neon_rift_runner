@@ -455,8 +455,8 @@ export class Game extends Scene {
 		gameOver = true;
 		explosionSound.play();
 		
-		// Save Score
-		GameData.addCoins(score);
+		// Save Score (async, don't wait)
+		GameData.addCoins(score).catch(err => console.error("Error adding coins:", err));
 		
 		setTimeout(() => this.resetGame(), 2000);
 	}

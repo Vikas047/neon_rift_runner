@@ -53,9 +53,9 @@ export class Shop extends Scene {
 			})
 			.setOrigin(0.5);
 
-		// Balance
+		// Balance (will be updated after coins load)
 		this.balanceText = this.add
-			.text(512, 100, `Coins: ${GameData.getCoins()}`, {
+			.text(512, 100, "Coins: Loading...", {
 				fontFamily: "Arial",
 				fontSize: 32,
 				color: "#ffb600",
@@ -63,6 +63,9 @@ export class Shop extends Scene {
 				strokeThickness: 4,
 			})
 			.setOrigin(0.5);
+		
+		// Load and display coins
+		this.updateBalance();
 
 		// Tabs
 		this.createTabs();
@@ -139,6 +142,11 @@ export class Shop extends Scene {
 
 		// Initial Content (async - fetches from wallet)
 		this.showItems("skins");
+	}
+
+	private async updateBalance(): Promise<void> {
+		const coins = await GameData.getCoins();
+		this.balanceText.setText(`Coins: ${coins}`);
 	}
 
 	private handleScroll(delta: number): void {
@@ -554,8 +562,9 @@ export class Shop extends Scene {
 		const cachedPrice = type === "skins" ? this.cachedSkinsPrice : this.cachedBackgroundsPrice;
 		const price = cachedPrice ?? (type === "skins" ? 250 : 500); // Fallback to base price
 		
-		// Check coins FIRST (instant - from localStorage)
-		if (GameData.getCoins() < price) {
+		// Check coins FIRST (instant - from cache)
+		const currentCoins = GameData.getCoinsSync();
+		if (currentCoins < price) {
 			this.cameras.main.shake(100, 0.01); // Not enough money - instant feedback
 			return;
 		}
@@ -583,12 +592,12 @@ export class Shop extends Scene {
 		
 		try {
 			// Remove coins first
-			if (!GameData.removeCoins(price)) {
+			if (!(await GameData.removeCoins(price))) {
 				mintingText.destroy();
 				return;
 			}
 			
-			this.balanceText.setText(`Coins: ${GameData.getCoins()}`);
+			await this.updateBalance();
 			
 			// Mint NFT on-chain
 			let mintResult;
@@ -602,8 +611,8 @@ export class Shop extends Scene {
 			
 			if (!mintResult.success) {
 				// Refund coins if minting failed
-				GameData.addCoins(price);
-				this.balanceText.setText(`Coins: ${GameData.getCoins()}`);
+				await GameData.addCoins(price);
+				await this.updateBalance();
 				
 				const errorText = this.add.text(512, 384, `Minting failed: ${mintResult.error}`, {
 					fontSize: "24px",
@@ -640,8 +649,8 @@ export class Shop extends Scene {
 			console.error("Buy random item error:", error);
 			
 			// Refund coins on error
-			GameData.addCoins(price);
-			this.balanceText.setText(`Coins: ${GameData.getCoins()}`);
+			await GameData.addCoins(price);
+			await this.updateBalance();
 			
 			const errorText = this.add.text(512, 384, `Error: ${error.message || "Failed to mint NFT"}`, {
 				fontSize: "24px",
@@ -907,7 +916,7 @@ export class Shop extends Scene {
 		input.style.position = "absolute";
 		input.style.left = "50%";
 		input.style.top = "50%"; // Game center is 384
-		input.style.transform = "translate(-50%, 0havepx)"; // Offset to y=380 (moved up 20px)
+		input.style.transform = "translate(-50%, 0px)"; // Offset to y=380 (moved up 20px)
 		input.style.width = "400px";
 		input.style.height = "40px";
 		input.style.boxSizing = "border-box";

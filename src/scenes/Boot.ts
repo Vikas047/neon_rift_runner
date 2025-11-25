@@ -10,7 +10,10 @@ export class Boot extends Scene {
 		// No need to load background image, using solid color
 	}
 
-	create(): void {
+	async create(): Promise<void> {
+		// Initialize coins cache from IndexedDB
+		await GameData.initCoins();
+		
 		// Use solid background color matching the equipped background theme
 		// Default to desert mirage if GameData not initialized yet
 		const bgKey = GameData.getEquippedBackground();

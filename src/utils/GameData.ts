@@ -261,19 +261,21 @@ export const BACKGROUNDS: ShopItem[] = [
 	},
 ];
 
+import { SecureStorage } from "./SecureStorage";
+
 export class GameData {
-	// Only store coins and equipped preferences in localStorage
-	// Owned items come from blockchain (wallet NFTs)
+	// Coins are stored in IndexedDB with encryption
+	// Equipped preferences are stored in localStorage (just user preferences)
 	private static STORAGE_KEY = "neon_rift_runner_data_v2";
+	private static coinsCache: number | null = null;
 
 	private static get data() {
 		const stored = localStorage.getItem(this.STORAGE_KEY);
 		if (stored) {
 			return JSON.parse(stored);
 		}
-		// Default values - only coins and equipped preferences
+		// Default values - only equipped preferences (coins are in IndexedDB)
 		return {
-			coins: 0,
 			equippedSkin: "skin-red",    // Default skin
 			equippedBg: "bg-desert",      // Default background
 		};
@@ -283,24 +285,47 @@ export class GameData {
 		localStorage.setItem(this.STORAGE_KEY, JSON.stringify(data));
 	}
 
-	static getCoins(): number {
-		return this.data.coins;
-	}
-
-	static addCoins(amount: number) {
-		const data = this.data;
-		data.coins += amount;
-		this.save(data);
-	}
-
-	static removeCoins(amount: number): boolean {
-		const data = this.data;
-		if (data.coins >= amount) {
-			data.coins -= amount;
-			this.save(data);
-			return true;
+	// Get coins from secure storage (async)
+	static async getCoins(): Promise<number> {
+		if (this.coinsCache !== null) {
+			return this.coinsCache;
 		}
-		return false;
+		const coins = await SecureStorage.getCoins();
+		this.coinsCache = coins;
+		return coins;
+	}
+
+	// Synchronous getter for backwards compatibility (returns cached value or 0)
+	static getCoinsSync(): number {
+		return this.coinsCache ?? 0;
+	}
+
+	static async addCoins(amount: number): Promise<void> {
+		await SecureStorage.addCoins(amount);
+		// Update cache
+		if (this.coinsCache !== null) {
+			this.coinsCache += amount;
+		} else {
+			this.coinsCache = await SecureStorage.getCoins();
+		}
+	}
+
+	static async removeCoins(amount: number): Promise<boolean> {
+		const success = await SecureStorage.removeCoins(amount);
+		if (success) {
+			// Update cache
+			if (this.coinsCache !== null) {
+				this.coinsCache -= amount;
+			} else {
+				this.coinsCache = await SecureStorage.getCoins();
+			}
+		}
+		return success;
+	}
+
+	// Initialize coins cache on app start
+	static async initCoins(): Promise<void> {
+		this.coinsCache = await SecureStorage.getCoins();
 	}
 
 	static hasItem(id: string): boolean {
