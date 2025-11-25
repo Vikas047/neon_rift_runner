@@ -452,12 +452,14 @@ export class Shop extends Scene {
 				cardComponents.push(transferBtn, transferIcon);
 			}
 
-			// NFT ID - Top Center
+			// NFT ID - Top Center (wrap if too long)
 			const nftY = -115;
 			const nftText = this.add.text(0, nftY, displayNftId === "default" ? "DEFAULT" : `NFT: ${displayNftId}`, {
 				fontSize: "10px",
 				color: displayNftId === "default" ? "#888888" : "#00ffff",
-				fontStyle: "bold"
+				fontStyle: "bold",
+				align: "center",
+				wordWrap: { width: 200 }
 			}).setOrigin(0.5);
 			cardComponents.push(nftText);
 
