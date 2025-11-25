@@ -214,12 +214,8 @@ export class Shop extends Scene {
 			// Fetch from blockchain
 			const ownedNFTs = await fetchOwnedNFTs();
 			ownedCount = type === "skins" ? ownedNFTs.skins.length : ownedNFTs.backgrounds.length;
-		} else {
-			// Fallback to localStorage
-			const itemType = type === "skins" ? "skin" : "background";
-			const ownedItems = GameData.getOwnedItemsByType(itemType);
-			ownedCount = ownedItems.length;
 		}
+		// If wallet not connected, ownedCount stays 0 (base price)
 		
 		// Aggressive Scaling
 		// Skins: Base 250 + Owned * 500
@@ -286,16 +282,8 @@ export class Shop extends Scene {
 					const item = allItems.find(i => i.id === itemId);
 					return item ? { item, nftId: nft.nftId } : null;
 				}).filter(card => card !== null) as { item: ShopItem; nftId: string }[];
-			} else {
-				// Fallback to localStorage if wallet not connected or contract not deployed
-				const itemType = type === "skins" ? "skin" : "background";
-				const ownedItems = GameData.getOwnedItemsByType(itemType);
-				
-				itemCards = ownedItems.map(owned => {
-					const item = allItems.find(i => i.id === owned.itemId);
-					return item ? { item, nftId: owned.nftId } : null;
-				}).filter(card => card !== null) as { item: ShopItem; nftId: string }[];
 			}
+			// If wallet not connected, itemCards stays empty - only defaults will be shown
 			
 			// Always add default items (hardcoded and available to everyone)
 			if (type === "skins") {

@@ -261,37 +261,21 @@ export const BACKGROUNDS: ShopItem[] = [
 	},
 ];
 
-interface OwnedItem {
-	itemId: string;
-	nftId: string;
-}
-
 export class GameData {
-	private static STORAGE_KEY = "neon_rift_runner_data_v1";
+	// Only store coins and equipped preferences in localStorage
+	// Owned items come from blockchain (wallet NFTs)
+	private static STORAGE_KEY = "neon_rift_runner_data_v2";
 
 	private static get data() {
 		const stored = localStorage.getItem(this.STORAGE_KEY);
 		if (stored) {
-			const data = JSON.parse(stored);
-			// Migrate old data format
-			if (data.ownedItems && data.ownedItems.length > 0 && typeof data.ownedItems[0] === "string") {
-				const migrated: OwnedItem[] = data.ownedItems.map((id: string) => {
-					const item = [...SKINS, ...BACKGROUNDS].find(i => i.id === id);
-					return { itemId: id, nftId: item ? item.nftId : `${id}-001` };
-				});
-				data.ownedItems = migrated;
-				this.save(data);
-			}
-			return data;
+			return JSON.parse(stored);
 		}
+		// Default values - only coins and equipped preferences
 		return {
 			coins: 0,
-			ownedItems: [
-				{ itemId: "skin-red", nftId: "GENESIS-002" },
-				{ itemId: "bg-desert", nftId: "LAND-011" }
-			] as OwnedItem[],
-			equippedSkin: "skin-red",
-			equippedBg: "bg-desert",
+			equippedSkin: "skin-red",    // Default skin
+			equippedBg: "bg-desert",      // Default background
 		};
 	}
 
@@ -320,63 +304,12 @@ export class GameData {
 	}
 
 	static hasItem(id: string): boolean {
-		// Always own default items
-		if (id === "skin-red" || id === "bg-desert") return true;
-		return this.data.ownedItems.some((item: OwnedItem) => item.itemId === id);
-	}
-
-	static generateUniqueNftId(baseNftId: string, itemId: string): string {
-		const data = this.data;
-		const existing = data.ownedItems.filter((item: OwnedItem) => item.itemId === itemId);
-		
-		if (existing.length === 0) {
-			return baseNftId; // First instance uses base NFT ID
-		}
-		
-		// Extract number from base NFT ID (e.g., "GENESIS-001" -> 1)
-		const match = baseNftId.match(/(\d+)$/);
-		const baseNum = match ? parseInt(match[1]) : 1;
-		
-		// Find highest existing number for this item
-		let maxNum = baseNum;
-		existing.forEach((item: OwnedItem) => {
-			const itemMatch = item.nftId.match(/(\d+)$/);
-			if (itemMatch) {
-				const num = parseInt(itemMatch[1]);
-				if (num > maxNum) maxNum = num;
-			}
-		});
-		
-		// Generate new NFT ID with incremented number
-		const prefix = baseNftId.replace(/\d+$/, "");
-		return `${prefix}${String(maxNum + 1).padStart(3, "0")}`;
-	}
-
-	static unlockItem(id: string): void {
-		const item = [...SKINS, ...BACKGROUNDS].find((i) => i.id === id);
-		if (!item) return;
-		
-		const data = this.data;
-		const uniqueNftId = this.generateUniqueNftId(item.nftId, id);
-		
-		data.ownedItems.push({ itemId: id, nftId: uniqueNftId });
-		this.save(data);
-	}
-
-	static buyItem(id: string): boolean {
-		const item = [...SKINS, ...BACKGROUNDS].find((i) => i.id === id);
-		if (!item) return false;
-
-		if (this.removeCoins(item.price)) {
-			this.unlockItem(id);
-			return true;
-		}
-		return false;
+		// Only check for default items - other ownership comes from blockchain
+		return id === "skin-red" || id === "bg-desert";
 	}
 
 	static equipItem(id: string, type: "skin" | "background") {
-		if (!this.hasItem(id)) return;
-
+		// No ownership check needed - ownership verified by blockchain
 		const data = this.data;
 		if (type === "skin") {
 			data.equippedSkin = id;
@@ -384,16 +317,6 @@ export class GameData {
 			data.equippedBg = id;
 		}
 		this.save(data);
-	}
-
-	static getAllOwnedItems(): OwnedItem[] {
-		return this.data.ownedItems;
-	}
-
-	static getOwnedItemsByType(type: "skin" | "background"): OwnedItem[] {
-		const allItems = type === "skin" ? SKINS : BACKGROUNDS;
-		const itemIds = allItems.map(i => i.id);
-		return this.data.ownedItems.filter((item: OwnedItem) => itemIds.includes(item.itemId));
 	}
 
 	static getEquippedSkin(): string {
