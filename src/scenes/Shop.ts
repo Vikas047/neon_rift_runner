@@ -838,13 +838,8 @@ export class Shop extends Scene {
 			.on("pointerdown", (pointer: Phaser.Input.Pointer) => {
 				pointer.event.stopPropagation(); // Prevent overlay click
 				// Unfocus input if clicking on modal background
-				if (this.isInputFocused) {
-					this.isInputFocused = false;
-					inputBg.setStrokeStyle(2, 0x4a90e2);
-					if (this.recipientAddress === "") {
-						this.inputText!.setText("Enter address...");
-						this.inputText!.setColor("#888888");
-					}
+				if (document.activeElement instanceof HTMLElement) {
+					document.activeElement.blur();
 				}
 			});
 
@@ -875,11 +870,7 @@ export class Shop extends Scene {
 			color: "#ffffff"
 		}).setOrigin(0.5);
 
-		// Input field placeholder (visual only, real input is HTML)
-		const inputBg = this.add.rectangle(512, 400, 400, 40, 0x2a2a2a)
-			.setStrokeStyle(2, 0x4a90e2);
-		
-		// Create HTML Input Element
+		// Create HTML Input Element (replaces visual placeholder)
 		const input = document.createElement("input");
 		input.type = "text";
 		input.placeholder = "Enter address...";
@@ -887,8 +878,9 @@ export class Shop extends Scene {
 		input.style.left = "50%";
 		input.style.top = "50%"; // Game center is 384
 		input.style.transform = "translate(-50%, 16px)"; // Offset to y=400 (400 - 384 = 16)
-		input.style.width = "380px";
-		input.style.height = "30px";
+		input.style.width = "400px";
+		input.style.height = "40px";
+		input.style.boxSizing = "border-box";
 		input.style.backgroundColor = "#2a2a2a";
 		input.style.color = "#ffffff";
 		input.style.border = "2px solid #4a90e2";
@@ -969,7 +961,6 @@ export class Shop extends Scene {
 			title,
 			itemInfo,
 			recipientLabel,
-			inputBg,
 			transferBtn,
 			transferBtnText,
 			closeBtn,
