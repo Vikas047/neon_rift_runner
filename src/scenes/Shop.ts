@@ -92,26 +92,15 @@ export class Shop extends Scene {
 		// Check wallet connection on scene start
 		WalletManager.checkConnection();
 		
-		// If wallet not connected, show connection modal
-		const verification = WalletManager.verifyWalletForAction();
-		if (!verification.valid) {
-			WalletUI.showConnectionModal(this, "Please connect your wallet to access the shop.");
-		}
-		
 		// Listen for wallet changes (connect/disconnect/switch)
 		this.walletChangeUnsubscribe = WalletManager.onWalletChange((walletInfo) => {
-			// If wallet disconnected, show connection modal
-			if (!walletInfo.connected) {
-				WalletUI.showConnectionModal(this, "Please connect your wallet to access the shop.");
-			}
-			
 			// Invalidate cache when wallet state changes
 			this.cachedSkinsData = null;
 			this.cachedBackgroundsData = null;
 			this.cachedSkinsPrice = null;
 			this.cachedBackgroundsPrice = null;
 			
-			// Refetch data for current tab
+			// Refetch data for current tab (will show message if not connected)
 			this.showItems(this.currentTab);
 		});
 		
@@ -274,6 +263,23 @@ export class Shop extends Scene {
 			console.error("Mask graphics not initialized!");
 		}
 
+		// Check if wallet is connected - if not, show message instead of cards
+		if (!WalletManager.isConnected()) {
+			const messageText = this.add.text(512, 450, "Please connect your wallet", {
+				fontSize: "32px",
+				color: "#ffffff",
+				fontStyle: "bold",
+				stroke: "#000000",
+				strokeThickness: 6,
+				align: "center"
+			}).setOrigin(0.5);
+			
+			this.itemsContainer.add(messageText);
+			this.maxScrollY = 0;
+			this.updateScrollBar();
+			return;
+		}
+
 		const allItems = type === "skins" ? SKINS : BACKGROUNDS;
 		
 		// Check cache first (both data AND price must be cached)
@@ -283,7 +289,7 @@ export class Shop extends Scene {
 		let itemCards: { item: ShopItem; nftId: string }[] = [];
 		let mysteryPrice: number;
 		
-		if (cachedData !== null && cachedPrice !== null) {
+		if (cachedData !== null && cachedPrice !== null && WalletManager.isConnected()) {
 			// Use cached data and price - NO async operations, instant render
 			itemCards = cachedData;
 			mysteryPrice = cachedPrice;
