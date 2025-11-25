@@ -257,6 +257,23 @@ export class Shop extends Scene {
 				const item = allItems.find(i => i.id === itemId);
 				return item ? { item, nftId: nft.nftId } : null;
 			}).filter(card => card !== null) as { item: ShopItem; nftId: string }[];
+
+			// Always add default items if they are not already in the list (or even if they are, defaults are separate non-NFTs)
+			// Default items are hardcoded and available to everyone
+			if (type === "skins") {
+				const defaultSkin = allItems.find(i => i.id === "dude-red"); // Crimson Rage
+				if (defaultSkin) {
+					// Prepend default skin
+					itemCards.unshift({ item: defaultSkin, nftId: "default" });
+				}
+			} else {
+				const defaultBg = allItems.find(i => i.id === "bg-desert"); // Desert Mirage
+				if (defaultBg) {
+					// Prepend default background
+					itemCards.unshift({ item: defaultBg, nftId: "default" });
+				}
+			}
+
 		} else {
 			// Fallback to localStorage if wallet not connected or contract not deployed
 			const itemType = type === "skins" ? "skin" : "background";
@@ -345,7 +362,8 @@ export class Shop extends Scene {
 	}
 
 	private createItemCard(x: number, y: number, item: ShopItem, nftId?: string): void {
-		const isOwned = GameData.hasItem(item.id);
+		// Default items are always "owned"
+		const isOwned = GameData.hasItem(item.id) || (nftId === "default");
 		const isEquipped =
 			item.type === "skin"
 				? GameData.getEquippedSkin() === item.assetKey
@@ -354,14 +372,16 @@ export class Shop extends Scene {
 		// Use provided NFT ID or fall back to item's base NFT ID
 		const displayNftId = nftId || item.nftId;
 
-		const bg = this.add.rectangle(0, 0, 220, 180, 0x333333).setStrokeStyle(2, 0xffffff);
+		// Taller card for lore and details
+		const bg = this.add.rectangle(0, 0, 220, 300, 0x333333).setStrokeStyle(2, 0xffffff);
 		
 		let preview: Phaser.GameObjects.Image | Phaser.GameObjects.Sprite;
 		
+		// Preview higher up
 		if (item.type === "skin") {
-			preview = this.add.sprite(0, -20, item.assetKey, 4).setScale(1.5);
+			preview = this.add.sprite(0, -60, item.assetKey, 4).setScale(1.5);
 		} else {
-			preview = this.add.image(0, -20, item.assetKey).setDisplaySize(150, 100);
+			preview = this.add.image(0, -60, item.assetKey).setDisplaySize(150, 100);
 		}
 		
 		// If not owned, hide it
@@ -370,7 +390,7 @@ export class Shop extends Scene {
 		}
 
 		// Name
-		const nameText = this.add.text(0, 30, isOwned ? item.name : "???", {
+		const nameText = this.add.text(0, 20, isOwned ? item.name : "???", {
 			fontSize: "16px",
 			color: "#ffffff",
 			fontStyle: "bold",
@@ -380,18 +400,18 @@ export class Shop extends Scene {
 
 		if (isOwned) {
 			// Transfer Button - Top Right (only for non-default items)
-			if (item.price > 0) {
-				const transferY = item.type === "background" ? -115 : -75;
+			if (displayNftId !== "default") {
+				const transferY = item.type === "background" ? -135 : -135;
 				const transferBtn = this.add.rectangle(90, transferY, 30, 30, 0x4a90e2)
 					.setStrokeStyle(2, 0xffffff)
 					.setInteractive({ cursor: "pointer" });
 				
-			// Transfer icon (using Unicode transfer symbol)
-			const transferIcon = this.add.text(90, transferY, "⇄", {
-				fontSize: "20px",
-				color: "#ffffff",
-				fontStyle: "bold"
-			}).setOrigin(0.5);
+				// Transfer icon (using Unicode transfer symbol)
+				const transferIcon = this.add.text(90, transferY, "⇄", {
+					fontSize: "20px",
+					color: "#ffffff",
+					fontStyle: "bold"
+				}).setOrigin(0.5);
 				
 				transferBtn.on("pointerdown", () => {
 					this.openTransferModal(item, displayNftId);
@@ -400,17 +420,17 @@ export class Shop extends Scene {
 				cardComponents.push(transferBtn, transferIcon);
 			}
 
-			// NFT ID - Top Center (higher for backgrounds)
-			const nftY = item.type === "background" ? -115 : -75;
-			const nftText = this.add.text(0, nftY, item.price === 0 ? "DEFAULT" : `NFT: ${displayNftId}`, {
+			// NFT ID - Top Center
+			const nftY = -115;
+			const nftText = this.add.text(0, nftY, displayNftId === "default" ? "DEFAULT" : `NFT: ${displayNftId}`, {
 				fontSize: "10px",
-				color: item.price === 0 ? "#888888" : "#00ffff",
+				color: displayNftId === "default" ? "#888888" : "#00ffff",
 				fontStyle: "bold"
 			}).setOrigin(0.5);
 			cardComponents.push(nftText);
 
-			// Rarity Badge - Top Left (adjusted for backgrounds)
-			const rarityY = item.type === "background" ? -95 : -55;
+			// Rarity Badge - Top Left
+			const rarityY = -135;
 			const rarityColor = RARITY_COLORS[item.rarity];
 			const rarityBg = this.add.rectangle(-90, rarityY, 70, 20, rarityColor);
 			const rarityText = this.add.text(-90, rarityY, item.rarity.toUpperCase(), {
@@ -430,28 +450,21 @@ export class Shop extends Scene {
 			cardComponents.push(loreText);
 
 			let actionBtn: Phaser.GameObjects.Container;
-			const btnY = 140; // Move button down to make room for lore
+			const btnY = 120; 
 
 			if (isEquipped) {
 				actionBtn = this.createButton(0, btnY, "EQUIPPED", 0x00ff00, null);
 			} else {
-				actionBtn = this.createButton(0, btnY, "EQUIP", 0x4a90e2, async () => {
+				actionBtn = this.createButton(0, btnY, "EQUIP", 0x4a90e2, () => {
 					GameData.equipItem(item.id, item.type);
-					// Update background immediately if a background was equipped
 					if (item.type === "background") {
 						this.updateBackground();
 					}
-					await this.showItems(this.currentTab); // Refresh
+					// Refresh UI
+					this.showItems(this.currentTab);
 				});
 			}
 			cardComponents.push(actionBtn);
-			
-			// Resize Background to fit new content
-			bg.setSize(220, 300);
-			// Shift preview up slightly
-			preview.y = -40;
-			nameText.y = 40;
-
 		} else {
 			// Locked Label
 			const lockedText = this.add.text(0, 80, "LOCKED", {
