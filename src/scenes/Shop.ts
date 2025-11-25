@@ -405,8 +405,9 @@ export class Shop extends Scene {
 	}
 
 	private createItemCard(x: number, y: number, item: ShopItem, nftId?: string): void {
-		// Default items are always "owned"
-		const isOwned = GameData.hasItem(item.id) || (nftId === "default");
+		// If nftId is provided, item is owned (came from itemCards which only contains owned items)
+		// nftId can be "default" for default items, or an actual NFT ID for wallet NFTs
+		const isOwned = nftId !== undefined;
 		const isEquipped =
 			item.type === "skin"
 				? GameData.getEquippedSkin() === item.assetKey
