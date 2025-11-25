@@ -855,8 +855,15 @@ export class Shop extends Scene {
 			fontStyle: "bold"
 		}).setOrigin(0.5);
 
-		// Item info
-		const itemInfo = this.add.text(512, 300, `${item.name}\n${nftId}`, {
+		// Item info - Shorten NFT ID
+		let displayIdText = nftId;
+		if (nftId !== "default" && nftId.length > 15) {
+			const start = nftId.substring(0, 8);
+			const end = nftId.substring(nftId.length - 6);
+			displayIdText = `${start}...${end}`;
+		}
+
+		const itemInfo = this.add.text(512, 300, `${item.name}\n${displayIdText}`, {
 			fontSize: "18px",
 			color: "#aaaaaa",
 			align: "center"
@@ -894,25 +901,7 @@ export class Shop extends Scene {
 			}
 		});
 
-
-		// Keyboard input handler
-		const keyHandler = (event: KeyboardEvent) => {
-			if (!this.isInputFocused) return;
-
-			if (event.key === "Backspace") {
-				this.recipientAddress = this.recipientAddress.slice(0, -1);
-			} else if (event.key === "Enter") {
-				// Submit on Enter
-				if (this.recipientAddress.trim()) {
-					this.executeTransfer(item, nftId, this.recipientAddress);
-				}
-				return;
-			} else if (event.key.length === 1) {
-				// Only add printable characters
-				this.recipientAddress += event.key;
-			}
-
-			// Update display text
+		const updateInputDisplay = () => {
 			if (this.recipientAddress === "") {
 				this.inputText!.setText("Enter address...");
 				this.inputText!.setColor("#888888");
@@ -926,12 +915,44 @@ export class Shop extends Scene {
 			}
 		};
 
-		// Add keyboard listener
+		// Keyboard input handler
+		const keyHandler = (event: KeyboardEvent) => {
+			if (!this.isInputFocused) return;
+
+			if (event.key === "Backspace") {
+				this.recipientAddress = this.recipientAddress.slice(0, -1);
+			} else if (event.key === "Enter") {
+				// Submit on Enter
+				if (this.recipientAddress.trim()) {
+					this.executeTransfer(item, nftId, this.recipientAddress);
+				}
+				return;
+			} else if (event.key.length === 1 && !event.ctrlKey && !event.metaKey) {
+				// Only add printable characters, ignore shortcuts like Ctrl+V (handled by paste)
+				this.recipientAddress += event.key;
+			}
+			updateInputDisplay();
+		};
+
+		// Paste handler
+		const pasteHandler = (event: ClipboardEvent) => {
+			if (!this.isInputFocused) return;
+			event.preventDefault();
+			const pastedText = event.clipboardData?.getData('text') || '';
+			if (pastedText) {
+				this.recipientAddress += pastedText.trim();
+				updateInputDisplay();
+			}
+		};
+
+		// Add listeners
 		window.addEventListener("keydown", keyHandler);
+		window.addEventListener("paste", pasteHandler);
 
 		// Store cleanup function
 		const cleanup = () => {
 			window.removeEventListener("keydown", keyHandler);
+			window.removeEventListener("paste", pasteHandler);
 		};
 
 		// Transfer button
