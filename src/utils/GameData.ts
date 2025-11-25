@@ -32,7 +32,7 @@ export const SKINS: ShopItem[] = [
 		price: 0,
 		type: "skin",
 		assetKey: "dude",
-		lore: "The original jumper. Forged in the pixel fires of 1985, he seeks only the highest platforms.",
+		lore: "The original runner. Forged in the pixel fires of 1985, he seeks only the highest platforms.",
 		nftId: "GENESIS-001",
 		rarity: "common",
 	},
@@ -205,7 +205,7 @@ export const BACKGROUNDS: ShopItem[] = [
 		price: 450,
 		type: "background",
 		assetKey: "bg-ocean",
-		lore: "Beneath the waves, the pressure is immense. Only the bravest jumpers dare these depths.",
+		lore: "Beneath the waves, the pressure is immense. Only the bravest runners dare these depths.",
 		nftId: "LAND-006",
 		rarity: "epic",
 	},
@@ -215,7 +215,7 @@ export const BACKGROUNDS: ShopItem[] = [
 		price: 600,
 		type: "background",
 		assetKey: "bg-space",
-		lore: "Among the stars, gravity is a suggestion. Here, jumpers become legends written in stardust.",
+		lore: "Among the stars, gravity is a suggestion. Here, runners become legends written in stardust.",
 		nftId: "LAND-007",
 		rarity: "legendary",
 	},
@@ -267,7 +267,7 @@ interface OwnedItem {
 }
 
 export class GameData {
-	private static STORAGE_KEY = "jumper_game_data_v2"; // Bump version for data migration
+	private static STORAGE_KEY = "neon_rift_runner_data_v1";
 
 	private static get data() {
 		const stored = localStorage.getItem(this.STORAGE_KEY);

@@ -1,6 +1,6 @@
-# Pixel Jump Adventures
+# Neon Rift Runner
 
-A fast-paced arcade jumper game built with Phaser 3 and TypeScript.
+An electric, synth-fueled runner built with Phaser 3 and TypeScript.
 
 ## 🎮 How to Play
 *   **Desktop**: Use Arrow Keys to move and jump.
