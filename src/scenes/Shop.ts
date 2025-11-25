@@ -970,7 +970,6 @@ export class Shop extends Scene {
 			itemInfo,
 			recipientLabel,
 			inputBg,
-			this.inputText!,
 			transferBtn,
 			transferBtnText,
 			closeBtn,
