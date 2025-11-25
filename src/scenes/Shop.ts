@@ -877,7 +877,7 @@ export class Shop extends Scene {
 		input.style.position = "absolute";
 		input.style.left = "50%";
 		input.style.top = "50%"; // Game center is 384
-		input.style.transform = "translate(-50%, 16px)"; // Offset to y=400 (400 - 384 = 16)
+		input.style.transform = "translate(-50%, 0px)"; // Offset to y=380 (moved up 20px)
 		input.style.width = "400px";
 		input.style.height = "40px";
 		input.style.boxSizing = "border-box";
