@@ -25,6 +25,11 @@ export class Shop extends Scene {
 	private recipientAddress: string = "";
 	private inputText: Phaser.GameObjects.Text | null = null;
 	private isInputFocused: boolean = false;
+	
+	// Cache for NFT data
+	private cachedSkinsData: { item: ShopItem; nftId: string }[] | null = null;
+	private cachedBackgroundsData: { item: ShopItem; nftId: string }[] | null = null;
+	private loadingText: Phaser.GameObjects.Text | null = null;
 
 	constructor() {
 		super("Shop");
@@ -215,12 +220,12 @@ export class Shop extends Scene {
 		}
 		
 		// Aggressive Scaling
-		// Skins: Base 500 + (Owned - 1) * 750
-		// Bgs: Base 1000 + (Owned - 1) * 1500
+		// Skins: Base 250 + Owned * 500
+		// Bgs: Base 500 + Owned * 1000
 		if (type === "skins") {
-			return 500 + ((ownedCount - 1) * 750);
+			return 250 + (ownedCount * 500);
 		} else {
-			return 1000 + ((ownedCount - 1) * 1500);
+			return 500 + (ownedCount * 1000);
 		}
 	}
 
@@ -243,25 +248,46 @@ export class Shop extends Scene {
 
 		const allItems = type === "skins" ? SKINS : BACKGROUNDS;
 		
-		// Fetch owned NFTs from wallet instead of localStorage
+		// Check cache first
+		const cachedData = type === "skins" ? this.cachedSkinsData : this.cachedBackgroundsData;
 		let itemCards: { item: ShopItem; nftId: string }[] = [];
 		
-		if (WalletManager.isConnected() && getPackageId()) {
-			// Fetch from blockchain
-			const ownedNFTs = await fetchOwnedNFTs();
-			const nftList = type === "skins" ? ownedNFTs.skins : ownedNFTs.backgrounds;
+		if (cachedData !== null) {
+			// Use cached data
+			itemCards = cachedData;
+		} else {
+			// Show loading text
+			this.loadingText = this.add.text(512, 450, "Loading...", {
+				fontSize: "24px",
+				color: "#ffffff",
+				fontStyle: "bold"
+			}).setOrigin(0.5).setDepth(1000);
 			
-			itemCards = nftList.map(nft => {
-				// Match by skinId or backgroundId from NFT to item id
-				const itemId = type === "skins" ? nft.skinId : nft.backgroundId;
-				const item = allItems.find(i => i.id === itemId);
-				return item ? { item, nftId: nft.nftId } : null;
-			}).filter(card => card !== null) as { item: ShopItem; nftId: string }[];
-
-			// Always add default items if they are not already in the list (or even if they are, defaults are separate non-NFTs)
-			// Default items are hardcoded and available to everyone
+			if (WalletManager.isConnected() && getPackageId()) {
+				// Fetch from blockchain
+				const ownedNFTs = await fetchOwnedNFTs();
+				const nftList = type === "skins" ? ownedNFTs.skins : ownedNFTs.backgrounds;
+				
+				itemCards = nftList.map(nft => {
+					// Match by skinId or backgroundId from NFT to item id
+					const itemId = type === "skins" ? nft.skinId : nft.backgroundId;
+					const item = allItems.find(i => i.id === itemId);
+					return item ? { item, nftId: nft.nftId } : null;
+				}).filter(card => card !== null) as { item: ShopItem; nftId: string }[];
+			} else {
+				// Fallback to localStorage if wallet not connected or contract not deployed
+				const itemType = type === "skins" ? "skin" : "background";
+				const ownedItems = GameData.getOwnedItemsByType(itemType);
+				
+				itemCards = ownedItems.map(owned => {
+					const item = allItems.find(i => i.id === owned.itemId);
+					return item ? { item, nftId: owned.nftId } : null;
+				}).filter(card => card !== null) as { item: ShopItem; nftId: string }[];
+			}
+			
+			// Always add default items (hardcoded and available to everyone)
 			if (type === "skins") {
-				const defaultSkin = allItems.find(i => i.id === "dude-red"); // Crimson Rage
+				const defaultSkin = allItems.find(i => i.id === "skin-red"); // Crimson Rage
 				if (defaultSkin) {
 					// Prepend default skin
 					itemCards.unshift({ item: defaultSkin, nftId: "default" });
@@ -273,16 +299,19 @@ export class Shop extends Scene {
 					itemCards.unshift({ item: defaultBg, nftId: "default" });
 				}
 			}
-
-		} else {
-			// Fallback to localStorage if wallet not connected or contract not deployed
-			const itemType = type === "skins" ? "skin" : "background";
-			const ownedItems = GameData.getOwnedItemsByType(itemType);
 			
-			itemCards = ownedItems.map(owned => {
-				const item = allItems.find(i => i.id === owned.itemId);
-				return item ? { item, nftId: owned.nftId } : null;
-			}).filter(card => card !== null) as { item: ShopItem; nftId: string }[];
+			// Cache the data
+			if (type === "skins") {
+				this.cachedSkinsData = itemCards;
+			} else {
+				this.cachedBackgroundsData = itemCards;
+			}
+			
+			// Remove loading text
+			if (this.loadingText) {
+				this.loadingText.destroy();
+				this.loadingText = null;
+			}
 		}
 
 		let x = 250;
@@ -552,6 +581,10 @@ export class Shop extends Scene {
 			
 			// Show reveal animation
 			await this.revealNFT(randomItem, mintResult.nftId!, type);
+			
+			// Invalidate cache to force re-fetch
+			this.cachedSkinsData = null;
+			this.cachedBackgroundsData = null;
 			
 			// Refresh UI to show new NFT
 			await this.showItems(this.currentTab);

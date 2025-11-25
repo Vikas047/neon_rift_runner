@@ -321,7 +321,7 @@ export class GameData {
 
 	static hasItem(id: string): boolean {
 		// Always own default items
-		if (id === "dude-red" || id === "bg-desert") return true;
+		if (id === "skin-red" || id === "bg-desert") return true;
 		return this.data.ownedItems.some((item: OwnedItem) => item.itemId === id);
 	}
 
