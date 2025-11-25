@@ -92,8 +92,19 @@ export class Shop extends Scene {
 		// Check wallet connection on scene start
 		WalletManager.checkConnection();
 		
+		// If wallet not connected, show connection modal
+		const verification = WalletManager.verifyWalletForAction();
+		if (!verification.valid) {
+			WalletUI.showConnectionModal(this, "Please connect your wallet to access the shop.");
+		}
+		
 		// Listen for wallet changes (connect/disconnect/switch)
 		this.walletChangeUnsubscribe = WalletManager.onWalletChange((walletInfo) => {
+			// If wallet disconnected, show connection modal
+			if (!walletInfo.connected) {
+				WalletUI.showConnectionModal(this, "Please connect your wallet to access the shop.");
+			}
+			
 			// Invalidate cache when wallet state changes
 			this.cachedSkinsData = null;
 			this.cachedBackgroundsData = null;
