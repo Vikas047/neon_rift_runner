@@ -875,84 +875,58 @@ export class Shop extends Scene {
 			color: "#ffffff"
 		}).setOrigin(0.5);
 
-		// Input field background
+		// Input field placeholder (visual only, real input is HTML)
 		const inputBg = this.add.rectangle(512, 400, 400, 40, 0x2a2a2a)
 			.setStrokeStyle(2, 0x4a90e2);
-
-		// Reset input state
-		this.recipientAddress = "";
-		this.isInputFocused = false;
-
-		// Input text
-		this.inputText = this.add.text(512, 400, "Enter address...", {
-			fontSize: "14px",
-			color: "#888888"
-		}).setOrigin(0.5, 0.5);
-
-		// Make input interactive
-		inputBg.setInteractive({ cursor: "text" });
-		inputBg.on("pointerdown", (pointer: Phaser.Input.Pointer) => {
-			pointer.event.stopPropagation(); // Prevent overlay click
-			this.isInputFocused = true;
-			inputBg.setStrokeStyle(2, 0x00ff00); // Green border when focused
-			if (this.recipientAddress === "") {
-				this.inputText!.setText("");
-				this.inputText!.setColor("#ffffff");
-			}
-		});
-
-		const updateInputDisplay = () => {
-			if (this.recipientAddress === "") {
-				this.inputText!.setText("Enter address...");
-				this.inputText!.setColor("#888888");
-			} else {
-				// Show full text or truncated with ellipsis
-				const displayText = this.recipientAddress.length > 35 
-					? this.recipientAddress.substring(0, 35) + "..." 
-					: this.recipientAddress;
-				this.inputText!.setText(displayText);
-				this.inputText!.setColor("#ffffff");
-			}
-		};
-
-		// Keyboard input handler
-		const keyHandler = (event: KeyboardEvent) => {
-			if (!this.isInputFocused) return;
-
-			if (event.key === "Backspace") {
-				this.recipientAddress = this.recipientAddress.slice(0, -1);
-			} else if (event.key === "Enter") {
-				// Submit on Enter
-				if (this.recipientAddress.trim()) {
-					this.executeTransfer(item, nftId, this.recipientAddress);
+		
+		// Create HTML Input Element
+		const input = document.createElement("input");
+		input.type = "text";
+		input.placeholder = "Enter address...";
+		input.style.position = "absolute";
+		input.style.left = "50%";
+		input.style.top = "50%"; // Game center is 384
+		input.style.transform = "translate(-50%, 16px)"; // Offset to y=400 (400 - 384 = 16)
+		input.style.width = "380px";
+		input.style.height = "30px";
+		input.style.backgroundColor = "#2a2a2a";
+		input.style.color = "#ffffff";
+		input.style.border = "2px solid #4a90e2";
+		input.style.fontSize = "16px";
+		input.style.padding = "5px";
+		input.style.textAlign = "center";
+		input.style.outline = "none";
+		input.style.zIndex = "10000";
+		
+		// Add focus/blur styles
+		input.onfocus = () => input.style.borderColor = "#00ff00";
+		input.onblur = () => input.style.borderColor = "#4a90e2";
+		
+		// Handle Enter key
+		input.onkeydown = (e) => {
+			if (e.key === "Enter") {
+				if (input.value.trim()) {
+					this.executeTransfer(item, nftId, input.value.trim());
 				}
-				return;
-			} else if (event.key.length === 1 && !event.ctrlKey && !event.metaKey) {
-				// Only add printable characters, ignore shortcuts like Ctrl+V (handled by paste)
-				this.recipientAddress += event.key;
-			}
-			updateInputDisplay();
-		};
-
-		// Paste handler
-		const pasteHandler = (event: ClipboardEvent) => {
-			if (!this.isInputFocused) return;
-			event.preventDefault();
-			const pastedText = event.clipboardData?.getData('text') || '';
-			if (pastedText) {
-				this.recipientAddress += pastedText.trim();
-				updateInputDisplay();
 			}
 		};
 
-		// Add listeners
-		window.addEventListener("keydown", keyHandler);
-		window.addEventListener("paste", pasteHandler);
+		// Append to game container
+		const gameCanvas = this.game.canvas;
+		if (gameCanvas.parentNode) {
+			gameCanvas.parentNode.appendChild(input);
+		} else {
+			document.body.appendChild(input);
+		}
+		
+		// Focus immediately
+		setTimeout(() => input.focus(), 100);
 
 		// Store cleanup function
 		const cleanup = () => {
-			window.removeEventListener("keydown", keyHandler);
-			window.removeEventListener("paste", pasteHandler);
+			if (input.parentNode) {
+				input.parentNode.removeChild(input);
+			}
 		};
 
 		// Transfer button
@@ -967,8 +941,8 @@ export class Shop extends Scene {
 		}).setOrigin(0.5);
 
 		transferBtn.on("pointerdown", () => {
-			if (this.recipientAddress.trim()) {
-				this.executeTransfer(item, nftId, this.recipientAddress);
+			if (input.value.trim()) {
+				this.executeTransfer(item, nftId, input.value.trim());
 			} else {
 				alert("Please enter a recipient address");
 			}
