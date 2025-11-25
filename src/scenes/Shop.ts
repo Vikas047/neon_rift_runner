@@ -512,17 +512,20 @@ export class Shop extends Scene {
 	}
 
 	private async buyRandomItem(type: "skins" | "backgrounds"): Promise<void> {
+		// Use cached price for instant check (price was cached when tab loaded)
+		const cachedPrice = type === "skins" ? this.cachedSkinsPrice : this.cachedBackgroundsPrice;
+		const price = cachedPrice ?? (type === "skins" ? 250 : 500); // Fallback to base price
+		
+		// Check coins FIRST (instant - from localStorage)
+		if (GameData.getCoins() < price) {
+			this.cameras.main.shake(100, 0.01); // Not enough money - instant feedback
+			return;
+		}
+		
 		// Check wallet connection before minting
 		const verification = WalletManager.verifyWalletForAction();
 		if (!verification.valid) {
 			WalletUI.showConnectionModal(this, `${verification.message}\n\nYou need to connect your wallet to mint NFTs.`);
-			return;
-		}
-		
-		const price = await this.getDynamicPrice(type);
-		
-		if (GameData.getCoins() < price) {
-			this.cameras.main.shake(100, 0.01); // Not enough money
 			return;
 		}
 
