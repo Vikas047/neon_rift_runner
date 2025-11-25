@@ -314,6 +314,9 @@ export class Shop extends Scene {
 			}
 		}
 		
+		// Get mystery card price BEFORE rendering anything (to avoid delay)
+		const mysteryPrice = await this.getDynamicPrice(type);
+		
 		// Always remove loading text after data is ready
 		if (this.loadingText) {
 			this.loadingText.destroy();
@@ -326,6 +329,7 @@ export class Shop extends Scene {
 		const paddingX = 250;
 		const paddingY = 320; // Increased vertical padding for taller cards
 
+		// Render all item cards
 		itemCards.forEach((cardData, index) => {
 			const col = index % cols;
 			const row = Math.floor(index / cols);
@@ -336,18 +340,14 @@ export class Shop extends Scene {
 			this.createItemCard(itemX, itemY, cardData.item, cardData.nftId);
 		});
 		
-		// Always show "Mystery Card" (unlimited unlocks allowed)
-		const price = await this.getDynamicPrice(type);
+		// Render mystery card at the end of the grid
+		const mysteryIndex = itemCards.length;
+		const mysteryCol = mysteryIndex % cols;
+		const mysteryRow = Math.floor(mysteryIndex / cols);
+		const mysteryX = x + mysteryCol * paddingX;
+		const mysteryY = y + mysteryRow * paddingY;
 		
-		// Calculate position for the next card in the grid
-		const index = itemCards.length; // Next available index
-		const col = index % cols;
-		const row = Math.floor(index / cols);
-		
-		const mysteryX = x + col * paddingX;
-		const mysteryY = y + row * paddingY;
-		
-		this.createMysteryCard(mysteryX, mysteryY, price, type);
+		this.createMysteryCard(mysteryX, mysteryY, mysteryPrice, type);
 		
 		// Calculate Max Scroll based on content height including mystery card
 		const totalItems = itemCards.length + 1;
