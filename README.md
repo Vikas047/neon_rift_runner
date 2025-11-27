@@ -9,7 +9,7 @@ Dash across a cyberpunk skyline, dodge bombs, collect encrypted coins, and unloc
 ## Links
 
 - **Live Demo**: [neon-rift-runner.vercel.app](https://neon-rift-runner.vercel.app)
-- **Demo Video**: `[Add YouTube link here]`
+- **Demo Video**: [Add YouTube link here](https://www.youtube.com/watch?v=oih0_BZvESM)
 - **Wallet**: OneWallet
 - **Skin / Background NFT Package**:  
   `0x9da588e412e32337eeadd07d62e40e0256adfaf5dadbbc13ea37e67fe3e9d608`
