@@ -29,7 +29,14 @@ Your **coins** are stored locally but **encrypted** in IndexedDB, making it much
 
 **Your skill. Your style. Your chain.**
 
-![Neon Rift Runner Screenshot](./screenshot.png)
+<img width="1858" height="984" alt="image" src="https://github.com/user-attachments/assets/a03f8afa-9de4-450c-8221-c1eba6082ca2" />
+
+<img width="1858" height="984" alt="image" src="https://github.com/user-attachments/assets/2136ca70-8f87-4bd7-8af1-523cd3c366f2" />
+<img width="1858" height="984" alt="image" src="https://github.com/user-attachments/assets/03db6553-69d0-411f-9cc6-ae9a52e6dbee" />
+<img width="1858" height="984" alt="image" src="https://github.com/user-attachments/assets/b5537694-dbd5-4072-863a-dc017928373b" />
+
+
+
 
 ---
 
@@ -76,17 +83,6 @@ Your **coins** are stored locally but **encrypted** in IndexedDB, making it much
 - Long NFT IDs are automatically **shortened** (`0x1234...abcd`) and wrapped nicely in:
   - Item cards.
   - Transfer modal.
-
-### Secure Coin Storage (Anti-Cheat Friendly)
-
-- Coins are **not** stored in `localStorage`.
-- Instead, they are stored in **IndexedDB** using:
-  - **AES-GCM (256-bit)** encryption.
-  - **PBKDF2** key derivation via the Web Crypto API.
-- Includes:
-  - Async APIs to read/write coins.
-  - A cached `getCoinsSync()` path for instant UI updates.
-  - Initialization in the boot scene so the game always has a consistent starting state.
 
 ### In-Game NFT Transfers
 
