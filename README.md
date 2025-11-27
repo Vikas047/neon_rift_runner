@@ -25,7 +25,7 @@ Neon Rift Runner is an **endless rooftop runner** built on **OneChain**.
 
 You sprint across a futuristic city, jumping between platforms, collecting coins, and dodging bombs.  
 Your **skins** and **backgrounds** are **real NFTs** on OneChain, minted and owned directly in your wallet.  
-Your **coins** are stored locally but **encrypted** in IndexedDB, making it much harder to cheat or tamper with.
+
 
 **Your skill. Your style. Your chain.**
 
